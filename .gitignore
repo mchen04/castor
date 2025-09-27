@@ -49,6 +49,28 @@ next-env.d.ts
 *.swo
 *~
 
+# stripe
+stripe-cli-webhook-secret
+
+# misc
+*.swp
+*.swo
+*~
+
+# turbo
+.turbo
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+
+# test
+test-results/
+playwright-report/
+playwright/.cache/
+
 # context (don't commit to repo)
 context/
 .claude/
