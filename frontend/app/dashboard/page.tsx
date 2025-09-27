@@ -8,18 +8,17 @@ import { GracePeriodWarning } from '@/components/grace-period-warning'
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data } = await supabase.auth.getClaims()
+  const userId = data?.claims?.sub
 
-  if (!user) {
+  if (!userId) {
     redirect('/login')
   }
 
   const { data: userData, error } = await supabase
     .from('users')
     .select('has_paid, stripe_subscription_status, in_grace_period')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (error) {
