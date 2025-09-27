@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PaywallCard } from '@/components/paywall-card'
+import { GracePeriodWarning } from '@/components/grace-period-warning'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -15,13 +16,23 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  const { data: userData } = await supabase
+  const { data: userData, error } = await supabase
     .from('users')
-    .select('has_paid')
+    .select('has_paid, stripe_subscription_status, in_grace_period')
     .eq('id', user.id)
     .single()
 
-  if (!userData?.has_paid) {
+  if (error) {
+    console.error('Error fetching user data:', error)
+  }
+
+  const hasAccess =
+    userData?.has_paid &&
+    ['active', 'trialing', 'past_due'].includes(
+      userData?.stripe_subscription_status || ''
+    )
+
+  if (!hasAccess) {
     return <PaywallCard />
   }
 
@@ -36,6 +47,8 @@ export default async function DashboardPage() {
             </Button>
           </form>
         </div>
+
+        {userData?.in_grace_period && <GracePeriodWarning />}
 
         <Card>
           <CardHeader>

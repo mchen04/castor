@@ -61,7 +61,7 @@ export default function GEOLandingPage() {
           </h1>
 
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto text-balance leading-relaxed">
-            300M+ people use ChatGPT weekly. If AI doesn't mention your brand, you don't exist. Get expert GEO
+            300M+ people use ChatGPT weekly. If AI doesn&apos;t mention your brand, you don&apos;t exist. Get expert GEO
             consultation starting at <span className="text-accent font-semibold">$59.99/month</span>.
           </p>
 

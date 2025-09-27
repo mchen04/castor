@@ -11,7 +11,7 @@ export default function AuthCodeError() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
-            Sorry, we couldn't verify your authentication. Please try logging in again.
+            Sorry, we couldn&apos;t verify your authentication. Please try logging in again.
           </p>
           <Button asChild className="w-full">
             <Link href="/login">Return to Login</Link>
