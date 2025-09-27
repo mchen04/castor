@@ -6,7 +6,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Castor - Expert GEO Consultation & AI Search Optimization',
-  description: 'Get expert Generative Engine Optimization (GEO) consultation to dominate AI search results. Optimize your content for ChatGPT, Perplexity, and Google AI Overviews. One-time payment, lifetime access.',
+  description: 'Get expert Generative Engine Optimization (GEO) consultation to dominate AI search results. Optimize your content for ChatGPT, Perplexity, and Google AI Overviews. Monthly subscription starting at $59.99/month.',
   keywords: ['GEO', 'Generative Engine Optimization', 'AI Search', 'ChatGPT SEO', 'Perplexity', 'AI Citations', 'Search Optimization'],
   authors: [{ name: 'Castor' }],
   openGraph: {
