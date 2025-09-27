@@ -9,22 +9,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST() {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data } = await supabase.auth.getClaims()
+  const userId = data?.claims?.sub
 
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { data: userData, error } = await supabase
     .from('users')
     .select('stripe_customer_id')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (error || !userData?.stripe_customer_id) {
-    console.error('Customer portal: No subscription found for user:', user.id)
+    console.error('Customer portal: No subscription found for user:', userId)
     return NextResponse.json(
       { error: 'No subscription found' },
       { status: 404 }
@@ -40,7 +39,7 @@ export async function POST() {
     return NextResponse.json({ url: session.url })
   } catch (err) {
     console.error('Error creating portal session:', {
-      userId: user.id,
+      userId,
       error: err instanceof Error ? err.message : 'Unknown error',
     })
     return NextResponse.json(

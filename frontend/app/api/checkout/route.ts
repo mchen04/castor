@@ -9,11 +9,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST() {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data } = await supabase.auth.getClaims()
+  const userId = data?.claims?.sub
+  const userEmail = data?.claims?.email
 
-  if (!user) {
+  if (!userId || !userEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -29,8 +29,8 @@ export async function POST() {
       mode: 'subscription',
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
-      client_reference_id: user.id,
-      customer_email: user.email,
+      client_reference_id: userId,
+      customer_email: userEmail,
     })
 
     return NextResponse.json({ url: session.url })
