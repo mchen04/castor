@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,7 @@ interface ServiceCardProps {
   badge?: string
   description?: string
   onButtonClick?: () => void
+  buttonHref?: string
   variant?: "accent" | "primary"
 }
 
@@ -56,6 +58,7 @@ export function ServiceCard({
   badge,
   description,
   onButtonClick,
+  buttonHref,
   variant = "accent",
 }: ServiceCardProps) {
   const styles = variantStyles[variant]
@@ -87,6 +90,7 @@ export function ServiceCard({
         </div>
 
         <Button
+          asChild={!!buttonHref}
           size="lg"
           variant={buttonVariant}
           className={cn(
@@ -95,8 +99,17 @@ export function ServiceCard({
           )}
           onClick={onButtonClick}
         >
-          {buttonText}
-          <ArrowRight className="ml-2 h-5 w-5" />
+          {buttonHref ? (
+            <Link href={buttonHref}>
+              {buttonText}
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          ) : (
+            <>
+              {buttonText}
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </>
+          )}
         </Button>
 
         {description && <p className="text-sm text-muted-foreground text-center">{description}</p>}

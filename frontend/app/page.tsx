@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +15,7 @@ import { Footer } from "@/components/footer"
 
 export default function GEOLandingPage() {
   const chatbotFeatures = [
-    { text: "Lifetime chatbot access" },
+    { text: "Monthly chatbot access" },
     { text: "24/7 GEO strategy consultation" },
     { text: "Content optimization guidance" },
     { text: "AI citation techniques" },
@@ -38,7 +39,7 @@ export default function GEOLandingPage() {
       author: "Mike Rodriguez, SEO Specialist",
     },
     {
-      quote: "Best $59.99 I've ever spent. The chatbot gives better advice than most consultants.",
+      quote: "Best $59.99/month I've ever spent. The chatbot gives better advice than most consultants.",
       author: "Lisa Park, Business Owner",
     },
   ]
@@ -61,19 +62,22 @@ export default function GEOLandingPage() {
 
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto text-balance leading-relaxed">
             300M+ people use ChatGPT weekly. If AI doesn't mention your brand, you don't exist. Get expert GEO
-            consultation starting at <span className="text-accent font-semibold">$59.99</span>.
+            consultation starting at <span className="text-accent font-semibold">$59.99/month</span>.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
+              asChild
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-8 py-6 text-lg"
             >
-              Get Expert GEO Consultation - $59.99
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <Link href="/login">
+                Get Expert GEO Consultation - $59.99/month
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
             </Button>
-            <Button variant="outline" size="lg" className="px-8 py-6 text-lg bg-transparent">
-              Learn Why GEO Matters
+            <Button variant="outline" size="lg" className="px-8 py-6 text-lg bg-transparent" asChild>
+              <a href="#problem">Learn Why GEO Matters</a>
             </Button>
           </div>
 
@@ -216,12 +220,13 @@ export default function GEOLandingPage() {
             <ServiceCard
               icon={Bot}
               title="GEO Expert Chatbot"
-              price="$59.99"
-              priceSubtext="One-Time Payment"
+              price="$59.99/month"
+              priceSubtext="Monthly Subscription"
               features={chatbotFeatures}
               buttonText="Get Instant Access"
+              buttonHref="/login"
               badge="Most Popular"
-              description="No subscription. Pay once, access forever."
+              description="Cancel anytime. No long-term commitment."
               variant="accent"
             />
 
@@ -250,8 +255,8 @@ export default function GEOLandingPage() {
               <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto text-2xl font-bold text-accent-foreground">
                 1
               </div>
-              <h3 className="text-xl font-semibold">Pay once ($59.99)</h3>
-              <p className="text-muted-foreground">One-time payment for lifetime access to our GEO expert chatbot</p>
+              <h3 className="text-xl font-semibold">Subscribe ($59.99/month)</h3>
+              <p className="text-muted-foreground">Monthly subscription for access to our GEO expert chatbot</p>
             </div>
 
             <div className="space-y-4">
@@ -306,19 +311,25 @@ export default function GEOLandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
+              asChild
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-12 py-6 text-xl"
             >
-              Start with Chatbot - $59.99
-              <ArrowRight className="ml-3 h-6 w-6" />
+              <Link href="/login">
+                Start with Chatbot - $59.99/month
+                <ArrowRight className="ml-3 h-6 w-6" />
+              </Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-12 py-6 text-xl bg-transparent"
+              asChild
             >
-              Get Custom Consulting
-              <ArrowRight className="ml-3 h-6 w-6" />
+              <a href="mailto:contact@castor.ai">
+                Get Custom Consulting
+                <ArrowRight className="ml-3 h-6 w-6" />
+              </a>
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">30-day money-back guarantee. Join 1,000+ satisfied customers.</p>

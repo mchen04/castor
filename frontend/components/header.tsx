@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Bot, Menu } from "lucide-react"
@@ -60,15 +61,15 @@ export function Header() {
                   {item.label}
                 </button>
               ))}
-              <Button variant="outline" className="mt-4 bg-transparent">
-                Login
+              <Button asChild variant="outline" className="mt-4 bg-transparent">
+                <Link href="/login">Login</Link>
               </Button>
             </nav>
           </SheetContent>
         </Sheet>
 
-        <Button variant="outline" size="sm" className="hidden md:flex bg-transparent">
-          Login
+        <Button asChild variant="outline" size="sm" className="hidden md:flex bg-transparent">
+          <Link href="/login">Login</Link>
         </Button>
       </div>
     </header>
