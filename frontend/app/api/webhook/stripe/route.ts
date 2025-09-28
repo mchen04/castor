@@ -179,6 +179,7 @@ async function processWebhookEvent(event: Stripe.Event) {
       .from('users')
       .update({
         has_paid: false,
+        stripe_subscription_id: null,
         stripe_subscription_status: 'canceled',
         stripe_subscription_current_period_end: null,
         stripe_subscription_cancel_at_period_end: false,
