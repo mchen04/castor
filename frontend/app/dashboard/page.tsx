@@ -55,10 +55,14 @@ export default async function DashboardPage() {
             <CardDescription>Ask anything about Generative Engine Optimization</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground">
-                Dify chatbot will be embedded here
-              </p>
+            <div className="w-full">
+              <iframe
+                src="https://udify.app/chatbot/fIZjEA7ZAmd1LKh8"
+                className="w-full border-0 rounded-lg"
+                style={{ height: '700px', minHeight: '700px' }}
+                allow="microphone"
+                title="GEO Expert Chatbot"
+              />
             </div>
           </CardContent>
         </Card>
