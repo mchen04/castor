@@ -57,7 +57,7 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="w-full">
               <iframe
-                src="https://udify.app/chatbot/fIZjEA7ZAmd1LKh8"
+                src="https://udify.app/chat/fIZjEA7ZAmd1LKh8"
                 className="w-full border-0 rounded-lg"
                 style={{ height: '700px', minHeight: '700px' }}
                 allow="microphone"
