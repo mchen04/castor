@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Brand } from '@/components/ui/brand'
 
 export function PaywallCard() {
   const [isLoading, setIsLoading] = useState(false)
@@ -34,14 +35,21 @@ export function PaywallCard() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="max-w-lg w-full">
-        <CardHeader>
-          <CardTitle>Unlock GEO Expert Chatbot</CardTitle>
-          <CardDescription>
-            Get access to our AI-powered GEO consultant for just $59.99/month
-          </CardDescription>
-        </CardHeader>
+    <div className="min-h-screen bg-background">
+      {/* Header with Brand Navigation */}
+      <div className="p-6">
+        <Brand />
+      </div>
+      
+      {/* Centered Paywall Card */}
+      <div className="flex items-center justify-center min-h-[calc(100vh-120px)]">
+        <Card className="max-w-lg w-full">
+          <CardHeader>
+            <CardTitle>Unlock GEO Expert Chatbot</CardTitle>
+            <CardDescription>
+              Get access to our AI-powered GEO consultant for just $59.99/month
+            </CardDescription>
+          </CardHeader>
         <CardContent className="space-y-4">
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>✓ 24/7 GEO strategy consultation</li>
@@ -64,7 +72,8 @@ export function PaywallCard() {
             {isLoading ? 'Loading...' : 'Purchase Access - $59.99/month'}
           </Button>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

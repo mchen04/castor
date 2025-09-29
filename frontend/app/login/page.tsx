@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Brand } from '@/components/ui/brand'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,12 +30,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="max-w-md w-full">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome to Castor</CardTitle>
-          <CardDescription>Sign in with your Google account to continue</CardDescription>
-        </CardHeader>
+    <div className="min-h-screen bg-background">
+      {/* Header with Brand Navigation */}
+      <div className="p-6">
+        <Brand />
+      </div>
+      
+      {/* Centered Login Card */}
+      <div className="flex items-center justify-center min-h-[calc(100vh-120px)]">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Welcome to Castor</CardTitle>
+            <CardDescription>Sign in with your Google account to continue</CardDescription>
+          </CardHeader>
         <CardContent className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -51,7 +59,8 @@ export default function LoginPage() {
             {isLoading ? 'Signing in...' : 'Sign in with Google'}
           </Button>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

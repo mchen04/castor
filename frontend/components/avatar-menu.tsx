@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { User, CreditCard, LogOut } from 'lucide-react'
+import { User, CreditCard, LogOut, Home } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import Link from 'next/link'
 
 export function AvatarMenu() {
   const [isLoading, setIsLoading] = useState(false)
@@ -68,6 +69,12 @@ export function AvatarMenu() {
         >
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/">
+              <Home className="mr-2 h-4 w-4" />
+              Home
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={handleManageSubscription}
             disabled={isLoading}
