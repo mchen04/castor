@@ -7,5 +7,5 @@ export async function POST() {
   await supabase.auth.signOut()
   
   revalidatePath('/', 'layout')
-  return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_SITE_URL!))
+  return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_SITE_URL!))
 }
