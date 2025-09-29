@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PaywallCard } from '@/components/paywall-card'
 import { GracePeriodWarning } from '@/components/grace-period-warning'
+import { AvatarMenu } from '@/components/avatar-menu'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -36,37 +35,24 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">GEO Expert Chatbot</h1>
-          <form action="/api/auth/logout" method="POST">
-            <Button variant="outline" type="submit">
-              Logout
-            </Button>
-          </form>
+    <div className="h-screen w-screen relative overflow-hidden">
+      {/* Grace Period Warning (if applicable) */}
+      {userData?.in_grace_period && (
+        <div className="absolute top-0 left-0 right-0 z-50">
+          <GracePeriodWarning />
         </div>
+      )}
 
-        {userData?.in_grace_period && <GracePeriodWarning />}
+      {/* Fullscreen Chatbot */}
+      <iframe
+        src="https://udify.app/chat/fIZjEA7ZAmd1LKh8"
+        className="w-full h-full border-0"
+        allow="microphone"
+        title="GEO Expert Chatbot"
+      />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Your GEO Consultant</CardTitle>
-            <CardDescription>Ask anything about Generative Engine Optimization</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="w-full">
-              <iframe
-                src="https://udify.app/chat/fIZjEA7ZAmd1LKh8"
-                className="w-full border-0 rounded-lg"
-                style={{ height: '700px', minHeight: '700px' }}
-                allow="microphone"
-                title="GEO Expert Chatbot"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Avatar Menu */}
+      <AvatarMenu />
     </div>
   )
 }
