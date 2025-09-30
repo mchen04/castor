@@ -64,13 +64,13 @@ export function ServiceCard({
   const styles = variantStyles[variant]
 
   return (
-    <Card className={cn("p-8 relative", styles.card)}>
+    <Card className={cn("p-8 relative h-full", styles.card)}>
       {badge && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
           <Badge className={cn("px-4 py-1", styles.badge)}>{badge}</Badge>
         </div>
       )}
-      <CardContent className="space-y-6 p-0">
+      <CardContent className="space-y-6 p-0 flex flex-col h-full">
         <div className="text-center space-y-2">
           <div className={cn("w-16 h-16 rounded-full flex items-center justify-center mx-auto", styles.icon)}>
             <Icon className="h-8 w-8" />
@@ -80,7 +80,7 @@ export function ServiceCard({
           <div className="text-muted-foreground">{priceSubtext}</div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 flex-1">
           {features.map((feature, index) => (
             <div key={index} className="flex items-center gap-3">
               <CheckCircle className={cn("h-5 w-5", styles.checkIcon)} />
@@ -89,30 +89,32 @@ export function ServiceCard({
           ))}
         </div>
 
-        <Button
-          asChild={!!buttonHref}
-          size="lg"
-          variant={buttonVariant}
-          className={cn(
-            "w-full font-semibold py-6 text-base px-4",
-            buttonVariant === "default" ? styles.button : styles.buttonOutline,
-          )}
-          onClick={onButtonClick}
-        >
-          {buttonHref ? (
-            <Link href={buttonHref}>
-              {buttonText}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          ) : (
-            <>
-              {buttonText}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </>
-          )}
-        </Button>
+        <div className="mt-auto space-y-4">
+          <Button
+            asChild={!!buttonHref}
+            size="lg"
+            variant={buttonVariant}
+            className={cn(
+              "w-full font-semibold py-6 text-base px-4",
+              buttonVariant === "default" ? styles.button : styles.buttonOutline,
+            )}
+            onClick={onButtonClick}
+          >
+            {buttonHref ? (
+              <Link href={buttonHref}>
+                {buttonText}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            ) : (
+              <>
+                {buttonText}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            )}
+          </Button>
 
-        {description && <p className="text-sm text-muted-foreground text-center">{description}</p>}
+          {description && <p className="text-sm text-muted-foreground text-center">{description}</p>}
+        </div>
       </CardContent>
     </Card>
   )
