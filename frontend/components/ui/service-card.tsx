@@ -76,7 +76,7 @@ export function ServiceCard({
             <Icon className="h-8 w-8" />
           </div>
           <h3 className="text-2xl font-bold">{title}</h3>
-          <div className="min-h-[5rem] flex flex-col justify-center">
+          <div className="min-h-[7rem] flex flex-col justify-center">
             <div className={cn("text-4xl font-bold", styles.price)}>{price}</div>
             <div className="text-muted-foreground">{priceSubtext}</div>
           </div>
