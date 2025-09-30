@@ -25,20 +25,24 @@ export function HeroSection() {
           {heroContent.subheadline}
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button
-            asChild
-            size="lg"
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-8 py-6 text-lg"
-          >
-            <Link href={heroContent.primaryCTA.href}>
-              {heroContent.primaryCTA.text}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-          <Button variant="outline" size="lg" className="px-8 py-6 text-lg bg-transparent" asChild>
-            <a href={heroContent.secondaryCTA.href}>{heroContent.secondaryCTA.text}</a>
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
+          <div className="w-full sm:w-auto">
+            <Button
+              asChild
+              size="lg"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 sm:px-8 py-6 text-sm sm:text-base md:text-lg whitespace-normal sm:whitespace-nowrap w-full sm:w-auto"
+            >
+              <Link href={heroContent.primaryCTA.href}>
+                {heroContent.primaryCTA.text}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
+          <div className="w-full sm:w-auto">
+            <Button variant="outline" size="lg" className="px-4 sm:px-8 py-6 text-sm sm:text-base md:text-lg bg-transparent whitespace-normal sm:whitespace-nowrap w-full sm:w-auto" asChild>
+              <a href={heroContent.secondaryCTA.href}>{heroContent.secondaryCTA.text}</a>
+            </Button>
+          </div>
         </div>
 
         {/* Research Counter Badge */}

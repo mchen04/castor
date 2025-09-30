@@ -11,7 +11,7 @@ export function Section({ children, className = "", id, background = "default" }
 
   return (
     <section id={id} className={`pt-12 pb-24 ${bgClass} ${className}`}>
-      <div className="container mx-auto px-4">{children}</div>
+      <div className="container mx-auto px-4 overflow-hidden">{children}</div>
     </section>
   )
 }
