@@ -8,6 +8,7 @@
     "components/ui/dialog.tsx",
     "components/ui/toast.tsx",
     "components/ui/toaster.tsx",
+    "components/ui/use-toast.ts",
     "components/ui/select.tsx",
     "components/ui/separator.tsx",
     "components/ui/accordion.tsx",
@@ -33,7 +34,6 @@
     "zod",
     "@hookform/resolvers",
     "sonner",
-    "@radix-ui/react-dialog",
     "@radix-ui/react-select",
     "@radix-ui/react-separator",
     "@radix-ui/react-toast",
@@ -42,7 +42,6 @@
     "@radix-ui/react-popover",
     "@radix-ui/react-tabs",
     "@radix-ui/react-switch",
-    "@radix-ui/react-dropdown-menu",
     "@radix-ui/react-tooltip",
     "@radix-ui/react-alert-dialog",
     "@radix-ui/react-progress",
@@ -50,8 +49,11 @@
     "react-day-picker",
     "cmdk",
     "@radix-ui/react-scroll-area",
-    "@radix-ui/react-avatar",
     "@radix-ui/react-checkbox",
-    "@radix-ui/react-label"
+    "@radix-ui/react-label",
+    "eslint",
+    "eslint-config-next",
+    "tailwindcss",
+    "tw-animate-css"
   ]
 }
