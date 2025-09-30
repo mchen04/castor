@@ -143,7 +143,7 @@ export const serviceTiers: ServiceTier[] = [
     priceSubtext: "Monthly Subscription",
     features: [
       { text: "Trained on 200+ GEO research papers" },
-      { text: "Personalized tactic recommendations (not generic advice)" },
+      { text: "Personalized tactic recommendations" },
       { text: "Weekly updates with latest research findings" },
       { text: "24/7 access to expert-level guidance" },
       { text: "Unlimited questions—no hourly limits" },
