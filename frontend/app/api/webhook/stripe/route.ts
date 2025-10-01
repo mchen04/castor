@@ -40,75 +40,34 @@ async function processWebhookEvent(event: Stripe.Event) {
     const subscriptionId = session.subscription as string
 
     if (userId) {
-      try {
-        let subscriptionData: {
-          status: string
-          current_period_end: number | null
-          cancel_at_period_end: boolean
-        } = {
-          status: 'active',
-          current_period_end: null,
-          cancel_at_period_end: false,
-        }
+      const { error } = await supabaseAdmin
+        .from('users')
+        .update({
+          has_paid: true,
+          stripe_customer_id: stripeCustomerId,
+          stripe_subscription_id: subscriptionId,
+          stripe_subscription_status: 'active',
+          stripe_subscription_current_period_end: null,
+          stripe_subscription_cancel_at_period_end: false,
+          in_grace_period: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId)
 
-        try {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-          subscriptionData = {
-            status: subscription.status,
-            current_period_end: 'current_period_end' in subscription 
-              ? (subscription.current_period_end as number) 
-              : null,
-            cancel_at_period_end: 'cancel_at_period_end' in subscription
-              ? (subscription.cancel_at_period_end as boolean)
-              : false,
-          }
-        } catch (subscriptionError) {
-          console.error('Failed to retrieve subscription, using fallback data:', {
-            eventId: event.id,
-            subscriptionId,
-            error: subscriptionError instanceof Error ? subscriptionError.message : 'Unknown error',
-          })
-        }
-
-        const { error } = await supabaseAdmin
-          .from('users')
-          .update({
-            has_paid: true,
-            stripe_customer_id: stripeCustomerId,
-            stripe_subscription_id: subscriptionId,
-            stripe_subscription_status: subscriptionData.status,
-            stripe_subscription_current_period_end:
-              subscriptionData.current_period_end
-                ? new Date(subscriptionData.current_period_end * 1000).toISOString()
-                : null,
-            stripe_subscription_cancel_at_period_end:
-              subscriptionData.cancel_at_period_end,
-            in_grace_period: false,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', userId)
-
-        if (error) {
-          console.error('Checkout session DB update failed:', {
-            eventId: event.id,
-            userId,
-            error: error.message,
-          })
-          throw new Error('Failed to update user')
-        }
-
-        console.log('Checkout session processed successfully:', {
+      if (error) {
+        console.error('Checkout session DB update failed:', {
           eventId: event.id,
           userId,
-          subscriptionId,
+          error: error.message,
         })
-      } catch (err) {
-        console.error('Error processing checkout session:', {
-          eventId: event.id,
-          error: err instanceof Error ? err.message : 'Unknown error',
-        })
-        throw err
+        throw new Error('Failed to update user')
       }
+
+      console.log('Checkout session processed successfully:', {
+        eventId: event.id,
+        userId,
+        subscriptionId,
+      })
     }
   }
 
@@ -316,15 +275,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  setImmediate(() => {
-    processWebhookEvent(event).catch((error) => {
-      console.error('Webhook processing failed:', {
-        eventId: event.id,
-        eventType: event.type,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
+  try {
+    await processWebhookEvent(event)
+  } catch (error) {
+    console.error('Webhook processing failed:', {
+      eventId: event.id,
+      eventType: event.type,
+      error: error instanceof Error ? error.message : 'Unknown error',
     })
-  })
+    return NextResponse.json(
+      { error: 'Webhook processing failed' },
+      { status: 500 }
+    )
+  }
 
   return NextResponse.json({ received: true })
 }
