@@ -35,11 +35,11 @@ async function processWebhookEvent(event: Stripe.Event) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
-    const userId = session.client_reference_id
+    const clerkUserId = session.client_reference_id // This is now Clerk user ID
     const stripeCustomerId = session.customer as string
     const subscriptionId = session.subscription as string
 
-    if (userId) {
+    if (clerkUserId) {
       const { error } = await supabaseAdmin
         .from('users')
         .update({
@@ -52,12 +52,12 @@ async function processWebhookEvent(event: Stripe.Event) {
           in_grace_period: false,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', userId)
+        .eq('clerk_id', clerkUserId) // Changed from .eq('id', userId)
 
       if (error) {
         console.error('Checkout session DB update failed:', {
           eventId: event.id,
-          userId,
+          clerkUserId,
           error: error.message,
         })
         throw new Error('Failed to update user')
@@ -65,7 +65,7 @@ async function processWebhookEvent(event: Stripe.Event) {
 
       console.log('Checkout session processed successfully:', {
         eventId: event.id,
-        userId,
+        clerkUserId,
         subscriptionId,
       })
     }

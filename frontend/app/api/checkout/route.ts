@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
@@ -7,15 +7,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 export async function POST() {
-  const supabase = await createClient()
+  const { userId } = await auth()
+  const user = await currentUser()
 
-  const { data } = await supabase.auth.getClaims()
-  const userId = data?.claims?.sub
-  const userEmail = data?.claims?.email
-
-  if (!userId || !userEmail) {
+  if (!userId || !user?.emailAddresses?.[0]?.emailAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const userEmail = user.emailAddresses[0].emailAddress
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -29,8 +28,11 @@ export async function POST() {
       mode: 'subscription',
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
-      client_reference_id: userId,
+      client_reference_id: userId, // Clerk user ID
       customer_email: userEmail,
+      metadata: {
+        clerk_user_id: userId
+      }
     })
 
     return NextResponse.json({ url: session.url })

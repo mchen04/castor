@@ -1,28 +1,40 @@
-import { createClient } from '@/lib/supabase/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { PaywallCard } from '@/components/paywall-card'
 import { GracePeriodWarning } from '@/components/grace-period-warning'
 import { AvatarMenu } from '@/components/avatar-menu'
 import { DifyChatbot } from '@/components/dify-chatbot'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const { data } = await supabase.auth.getClaims()
-  const userId = data?.claims?.sub
+  const { userId } = await auth()
 
   if (!userId) {
-    redirect('/login')
+    redirect('/sign-in')
   }
 
-  const { data: userData, error } = await supabase
+  const supabase = await createClient()
+
+  // Query by clerk_id instead of UUID
+  let { data: userData, error } = await supabase
     .from('users')
     .select('has_paid, stripe_subscription_status, in_grace_period')
-    .eq('id', userId)
+    .eq('clerk_id', userId)
     .single()
 
-  if (error) {
-    console.error('Error fetching user data:', error)
+  // Create user record if doesn't exist (first login)
+  if (error?.code === 'PGRST116') {
+    const user = await currentUser()
+    const { error: insertError } = await supabase
+      .from('users')
+      .insert({
+        clerk_id: userId,
+        email: user?.emailAddresses?.[0]?.emailAddress || ''
+      })
+
+    if (!insertError) {
+      userData = { has_paid: false, stripe_subscription_status: null, in_grace_period: false }
+    }
   }
 
   const hasAccess =

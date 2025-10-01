@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { User, CreditCard, LogOut } from 'lucide-react'
+import { useUser, useClerk } from '@clerk/nextjs'
+import { CreditCard, LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -13,6 +14,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export function AvatarMenu() {
+  const { user } = useUser()
+  const { signOut } = useClerk()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleManageSubscription = async () => {
@@ -21,11 +24,11 @@ export function AvatarMenu() {
       const response = await fetch('/api/customer-portal', {
         method: 'POST',
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to create portal session')
       }
-      
+
       const data = await response.json()
       if (data.url) {
         window.location.href = data.url
@@ -37,38 +40,32 @@ export function AvatarMenu() {
     }
   }
 
-  const handleLogout = async () => {
-    setIsLoading(true)
-    const form = document.createElement('form')
-    form.method = 'POST'
-    form.action = '/api/auth/logout'
-    document.body.appendChild(form)
-    form.submit()
+  const handleLogout = () => {
+    signOut({ redirectUrl: '/' })
   }
 
   return (
     <div className="fixed bottom-4 left-4 z-50">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button 
+          <button
             className="rounded-full ring-2 ring-gray-700/50 hover:ring-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isLoading}
           >
             <Avatar className="h-10 w-10">
-              <AvatarImage src="" />
+              <AvatarImage src={user?.imageUrl} />
               <AvatarFallback className="bg-gray-800 text-gray-300">
-                <User className="h-5 w-5" />
+                {user?.firstName?.charAt(0) || user?.emailAddresses?.[0]?.emailAddress?.charAt(0)?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="start" 
-          className="w-56 mb-2"
-        >
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuContent align="start" className="w-56 mb-2">
+          <DropdownMenuLabel>
+            {user?.fullName || user?.primaryEmailAddress?.emailAddress || 'My Account'}
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={handleManageSubscription}
             disabled={isLoading}
             className="cursor-pointer"
@@ -77,7 +74,7 @@ export function AvatarMenu() {
             Manage Subscription
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={handleLogout}
             disabled={isLoading}
             className="cursor-pointer text-red-600 focus:text-red-600"
