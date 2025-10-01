@@ -16,14 +16,14 @@ export default async function DashboardPage() {
   const supabase = await createClient()
 
   // Query by clerk_id instead of UUID
-  let { data: userData, error } = await supabase
+  let { data: userData, error: fetchError } = await supabase
     .from('users')
     .select('has_paid, stripe_subscription_status, in_grace_period')
     .eq('clerk_id', userId)
     .single()
 
   // Create user record if doesn't exist (first login)
-  if (error?.code === 'PGRST116') {
+  if (fetchError?.code === 'PGRST116') {
     const user = await currentUser()
     const { error: insertError } = await supabase
       .from('users')
