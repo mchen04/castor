@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { PaywallCard } from '@/components/paywall-card'
 import { GracePeriodWarning } from '@/components/grace-period-warning'
 import { AvatarMenu } from '@/components/avatar-menu'
+import { DifyChatbot } from '@/components/dify-chatbot'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -44,12 +45,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Fullscreen Chatbot */}
-      <iframe
-        src="https://udify.app/chat/fIZjEA7ZAmd1LKh8"
-        className="w-full h-full border-0"
-        allow="microphone"
-        title="GEO Expert Chatbot"
-      />
+      <DifyChatbot userId={userId} />
 
       {/* Avatar Menu */}
       <AvatarMenu />
