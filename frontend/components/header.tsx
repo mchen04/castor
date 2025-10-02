@@ -1,11 +1,18 @@
 "use client"
 
 import Link from "next/link"
+import { useUser, useClerk } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet"
-import { Bot, Menu } from "lucide-react"
+import { UserMenu, UserMenuItem } from "@/components/user-menu"
+import { Bot, Menu, LayoutDashboard, LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function Header() {
+  const { user, isLoaded } = useUser()
+  const { signOut } = useClerk()
+  const router = useRouter()
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
     if (element) {
@@ -18,6 +25,21 @@ export function Header() {
     { id: "solution", label: "How It Works" },
     { id: "services", label: "Services" },
     { id: "testimonials", label: "Testimonials" },
+  ]
+
+  const userMenuItems: UserMenuItem[] = [
+    {
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      onClick: () => router.push('/dashboard'),
+    },
+    {
+      label: "Sign Out",
+      icon: LogOut,
+      onClick: () => signOut({ redirectUrl: '/' }),
+      variant: 'destructive' as const,
+      separator: true,
+    },
   ]
 
   return (
@@ -72,17 +94,54 @@ export function Header() {
               ))}
             </nav>
 
+            {/* Mobile Auth Section */}
             <SheetFooter className="mt-auto">
-              <Button asChild variant="outline" size="lg" className="w-full bg-transparent">
-                <Link href="/sign-in">Login</Link>
-              </Button>
+              {isLoaded && (
+                <>
+                  {user ? (
+                    <div className="w-full flex flex-col gap-3">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="w-full bg-transparent justify-start"
+                        onClick={() => router.push('/dashboard')}
+                      >
+                        <LayoutDashboard className="mr-2 h-5 w-5" />
+                        Dashboard
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="w-full bg-transparent justify-start text-red-600 border-red-600/50 hover:bg-red-600/10"
+                        onClick={() => signOut({ redirectUrl: '/' })}
+                      >
+                        <LogOut className="mr-2 h-5 w-5" />
+                        Sign Out
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button asChild variant="outline" size="lg" className="w-full bg-transparent">
+                      <Link href="/sign-in">Login</Link>
+                    </Button>
+                  )}
+                </>
+              )}
             </SheetFooter>
           </SheetContent>
         </Sheet>
 
-        <Button asChild variant="outline" size="sm" className="hidden md:flex bg-transparent">
-          <Link href="/sign-in">Login</Link>
-        </Button>
+        {/* Desktop Auth Section */}
+        {isLoaded && (
+          <>
+            {user ? (
+              <UserMenu menuItems={userMenuItems} position="header" align="end" />
+            ) : (
+              <Button asChild variant="outline" size="sm" className="hidden md:flex bg-transparent">
+                <Link href="/sign-in">Login</Link>
+              </Button>
+            )}
+          </>
+        )}
       </div>
     </header>
   )
