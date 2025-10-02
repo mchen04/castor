@@ -5,6 +5,7 @@ import { PaywallCard } from '@/components/paywall-card'
 import { GracePeriodWarning } from '@/components/grace-period-warning'
 import { AvatarMenu } from '@/components/avatar-menu'
 import { DifyChatbot } from '@/components/dify-chatbot'
+import { CheckoutVerifier } from '@/components/checkout-verifier'
 
 export default async function DashboardPage() {
   const { userId } = await auth()
@@ -46,23 +47,31 @@ export default async function DashboardPage() {
     )
 
   if (!hasAccess) {
-    return <PaywallCard />
+    return (
+      <>
+        <CheckoutVerifier />
+        <PaywallCard />
+      </>
+    )
   }
 
   return (
-    <div className="h-screen w-screen relative overflow-hidden">
-      {/* Grace Period Warning (if applicable) */}
-      {userData?.in_grace_period && (
-        <div className="absolute top-0 left-0 right-0 z-50">
-          <GracePeriodWarning />
-        </div>
-      )}
+    <>
+      <CheckoutVerifier />
+      <div className="h-screen w-screen relative overflow-hidden">
+        {/* Grace Period Warning (if applicable) */}
+        {userData?.in_grace_period && (
+          <div className="absolute top-0 left-0 right-0 z-50">
+            <GracePeriodWarning />
+          </div>
+        )}
 
-      {/* Fullscreen Chatbot */}
-      <DifyChatbot userId={userId} />
+        {/* Fullscreen Chatbot */}
+        <DifyChatbot userId={userId} />
 
-      {/* Avatar Menu */}
-      <AvatarMenu />
-    </div>
+        {/* Avatar Menu */}
+        <AvatarMenu />
+      </div>
+    </>
   )
 }

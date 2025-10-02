@@ -39,16 +39,26 @@ async function processWebhookEvent(event: Stripe.Event) {
     const stripeCustomerId = session.customer as string
     const subscriptionId = session.subscription as string
 
-    if (clerkUserId) {
+    if (clerkUserId && subscriptionId) {
+      // Retrieve full subscription object to get current_period_end and actual status
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+
+      const currentPeriodEnd =
+        'current_period_end' in subscription &&
+        typeof subscription.current_period_end === 'number'
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : null
+
       const { error } = await supabaseAdmin
         .from('users')
         .update({
           has_paid: true,
           stripe_customer_id: stripeCustomerId,
           stripe_subscription_id: subscriptionId,
-          stripe_subscription_status: 'active',
-          stripe_subscription_current_period_end: null,
-          stripe_subscription_cancel_at_period_end: false,
+          stripe_subscription_status: subscription.status,
+          stripe_subscription_current_period_end: currentPeriodEnd,
+          stripe_subscription_cancel_at_period_end:
+            subscription.cancel_at_period_end || false,
           in_grace_period: false,
           updated_at: new Date().toISOString(),
         })
@@ -67,6 +77,8 @@ async function processWebhookEvent(event: Stripe.Event) {
         eventId: event.id,
         clerkUserId,
         subscriptionId,
+        subscriptionStatus: subscription.status,
+        currentPeriodEnd,
       })
     }
   }
