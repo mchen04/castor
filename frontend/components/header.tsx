@@ -5,6 +5,7 @@ import { useUser, useClerk } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet"
 import { UserMenu, UserMenuItem } from "@/components/user-menu"
+import { HeaderAuthSkeleton } from "@/components/header-auth-skeleton"
 import { Bot, Menu, LayoutDashboard, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -131,17 +132,17 @@ export function Header() {
         </Sheet>
 
         {/* Desktop Auth Section */}
-        {isLoaded && (
-          <>
-            {user ? (
-              <UserMenu menuItems={userMenuItems} position="header" align="end" />
-            ) : (
-              <Button asChild variant="outline" size="sm" className="hidden md:flex bg-transparent">
-                <Link href="/sign-in">Login</Link>
-              </Button>
-            )}
-          </>
-        )}
+        <div className="hidden md:flex items-center min-w-[80px] justify-end">
+          {!isLoaded ? (
+            <HeaderAuthSkeleton />
+          ) : user ? (
+            <UserMenu menuItems={userMenuItems} position="header" align="end" />
+          ) : (
+            <Button asChild variant="outline" size="sm" className="bg-transparent">
+              <Link href="/sign-in">Login</Link>
+            </Button>
+          )}
+        </div>
       </div>
     </header>
   )
