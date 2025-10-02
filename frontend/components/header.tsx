@@ -74,14 +74,14 @@ export function Header() {
 
             <SheetFooter className="mt-auto">
               <Button asChild variant="outline" size="lg" className="w-full bg-transparent">
-                <Link href="/login">Login</Link>
+                <Link href="/sign-in">Login</Link>
               </Button>
             </SheetFooter>
           </SheetContent>
         </Sheet>
 
         <Button asChild variant="outline" size="sm" className="hidden md:flex bg-transparent">
-          <Link href="/login">Login</Link>
+          <Link href="/sign-in">Login</Link>
         </Button>
       </div>
     </header>

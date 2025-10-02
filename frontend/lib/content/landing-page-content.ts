@@ -20,7 +20,7 @@ export const heroContent: HeroContent = {
     "GEO consulting costs $6,000+/month. Get the same research-backed expertise for $59.99/month—available 24/7.",
   primaryCTA: {
     text: "Get Research-Backed GEO Advice - $59.99/month",
-    href: "/login",
+    href: "/sign-in",
   },
   secondaryCTA: {
     text: "Learn Why GEO Matters",
@@ -149,7 +149,7 @@ export const serviceTiers: ServiceTier[] = [
       { text: "Unlimited questions—no hourly limits" },
     ],
     buttonText: "Start for $59.99/month",
-    buttonHref: "/login",
+    buttonHref: "/sign-in",
     badge: "Most Popular",
     description: "Access the same knowledge base that professional agencies use to charge $6,000+/month. Research-backed recommendations, continuously updated.",
     variant: "accent",
@@ -228,7 +228,7 @@ export const finalCTAContent: FinalCTAContent = {
     "While your competitors pay $6,000+/month for GEO consulting, you can access the same research-backed expertise for $59.99. Start optimizing for AI search today.",
   primaryCTA: {
     text: "Get Expert GEO Advice - $59.99/month",
-    href: "/login",
+    href: "/sign-in",
   },
   secondaryCTA: {
     text: "Get Custom Consulting",
