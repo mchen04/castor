@@ -29,7 +29,6 @@ import {
   Trash2,
   Settings,
   LogOut,
-  User,
   Edit2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -234,10 +233,6 @@ export function ChatSidebar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
