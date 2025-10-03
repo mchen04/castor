@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { useSession } from "@clerk/nextjs"
 import { useSupabaseClient } from "@/hooks/use-supabase-client"
 import type { Message } from "@/lib/types"
 
@@ -14,6 +15,7 @@ export function useChat({ userId, conversationId, onConversationIdChange }: UseC
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(conversationId)
+  const { session } = useSession()
   const supabase = useSupabaseClient()
 
   const sendMessage = useCallback(
@@ -42,36 +44,20 @@ export function useChat({ userId, conversationId, onConversationIdChange }: UseC
       setMessages((prev) => [...prev, assistantMessage])
 
       try {
-        // Get current session for auth
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+        // Get current session token for auth
+        const token = await session?.getToken()
 
-        if (!session) {
+        if (!token) {
           throw new Error("Not authenticated")
         }
 
-        // Call Supabase Edge Function
-        const { data, error } = await supabase.functions.invoke("dify-chat", {
-          body: {
-            query: content,
-            conversationId: currentConversationId || "",
-            userId,
-          },
-        })
-
-        if (error) {
-          throw error
-        }
-
-        // The Edge Function returns the raw SSE stream
-        // We need to parse it manually
+        // Call Supabase Edge Function with SSE stream
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-chat`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${session.access_token}`,
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -168,7 +154,7 @@ export function useChat({ userId, conversationId, onConversationIdChange }: UseC
         setIsLoading(false)
       }
     },
-    [userId, currentConversationId, onConversationIdChange, supabase]
+    [userId, currentConversationId, onConversationIdChange, session]
   )
 
   const clearMessages = useCallback(() => {

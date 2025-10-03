@@ -79,7 +79,6 @@ Deno.serve(async (req) => {
     const queryParams = new URLSearchParams({
       user: userId,
       limit,
-      sort_by: '-updated_at',
     })
 
     if (lastId) {

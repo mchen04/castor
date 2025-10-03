@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import { useSession } from "@clerk/nextjs"
 import { useSupabaseClient } from "@/hooks/use-supabase-client"
 import type { Conversation, Message } from "@/lib/types"
 
@@ -34,17 +35,16 @@ export function useConversations({ userId }: UseConversationsOptions) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { session } = useSession()
   const supabase = useSupabaseClient()
 
   // Load conversations from Dify API
   const loadConversations = useCallback(async () => {
     setIsLoading(true)
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      const token = await session?.getToken()
 
-      if (!session) {
+      if (!token) {
         throw new Error("Not authenticated")
       }
 
@@ -52,7 +52,7 @@ export function useConversations({ userId }: UseConversationsOptions) {
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-conversations?userId=${userId}&limit=50`,
         {
           headers: {
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       )
@@ -78,16 +78,14 @@ export function useConversations({ userId }: UseConversationsOptions) {
     } finally {
       setIsLoading(false)
     }
-  }, [userId, supabase])
+  }, [userId, session])
 
   // Load conversation messages
   const loadConversationMessages = useCallback(async (conversationId: string): Promise<Message[]> => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      const token = await session?.getToken()
 
-      if (!session) {
+      if (!token) {
         throw new Error("Not authenticated")
       }
 
@@ -95,7 +93,7 @@ export function useConversations({ userId }: UseConversationsOptions) {
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-messages?conversationId=${conversationId}&limit=100`,
         {
           headers: {
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       )
@@ -133,7 +131,7 @@ export function useConversations({ userId }: UseConversationsOptions) {
       console.error("Failed to load conversation messages:", error)
       return []
     }
-  }, [supabase])
+  }, [session])
 
   // Load conversations on mount
   useEffect(() => {
