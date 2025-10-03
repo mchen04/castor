@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 export function HeaderAuthSkeleton() {
   return (
     <div className="flex items-center">
-      <Skeleton className="h-10 w-20 rounded-md" />
+      <Skeleton className="h-10 w-20 rounded-md bg-muted" />
     </div>
   )
 }
