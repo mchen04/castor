@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PaywallCard } from '@/components/paywall-card'
 import { GracePeriodWarning } from '@/components/grace-period-warning'
 import { AvatarMenu } from '@/components/avatar-menu'
-import { DifyChatbot } from '@/components/dify-chatbot'
+import { ChatLayout } from '@/components/chat-layout'
 import { CheckoutVerifier } from '@/components/checkout-verifier'
 
 export default async function DashboardPage() {
@@ -66,8 +66,8 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Fullscreen Chatbot */}
-        <DifyChatbot userId={userId} />
+        {/* Custom Dify Chatbot UI */}
+        <ChatLayout userId={userId} />
 
         {/* Avatar Menu */}
         <AvatarMenu />

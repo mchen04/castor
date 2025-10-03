@@ -1,0 +1,129 @@
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+
+const DIFY_API_URL = 'https://api.dify.ai/v1'
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      },
+    })
+  }
+
+  try {
+    // Get Dify API key from environment
+    const DIFY_API_KEY = Deno.env.get('DIFY_API_KEY')
+    if (!DIFY_API_KEY) {
+      throw new Error('DIFY_API_KEY not configured')
+    }
+
+    // Verify user authentication via Supabase
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    )
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseClient.auth.getUser()
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Verify user has paid subscription
+    const { data: userData, error: userError } = await supabaseClient
+      .from('users')
+      .select('has_paid, stripe_subscription_status')
+      .eq('clerk_id', user.id)
+      .single()
+
+    if (
+      userError ||
+      !userData?.has_paid ||
+      !['active', 'trialing', 'past_due'].includes(userData.stripe_subscription_status || '')
+    ) {
+      return new Response(JSON.stringify({ error: 'Subscription required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Parse query parameters
+    const url = new URL(req.url)
+    const userId = url.searchParams.get('userId')
+    const limit = url.searchParams.get('limit') || '20'
+    const lastId = url.searchParams.get('last_id')
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Missing required parameter: userId' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Build query parameters for Dify API
+    const queryParams = new URLSearchParams({
+      user: userId,
+      limit,
+      sort_by: '-updated_at',
+    })
+
+    if (lastId) {
+      queryParams.append('last_id', lastId)
+    }
+
+    // Call Dify API to get conversations list
+    const difyResponse = await fetch(
+      `${DIFY_API_URL}/conversations?${queryParams.toString()}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${DIFY_API_KEY}`,
+        },
+      }
+    )
+
+    if (!difyResponse.ok) {
+      const errorText = await difyResponse.text()
+      console.error('Dify API error:', errorText)
+      return new Response(
+        JSON.stringify({ error: 'Dify API error', details: errorText }),
+        {
+          status: difyResponse.status,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    const conversations = await difyResponse.json()
+
+    return new Response(JSON.stringify(conversations), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    })
+  } catch (error) {
+    console.error('Edge function error:', error)
+    return new Response(
+      JSON.stringify({ error: error.message || 'Internal server error' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+  }
+})

@@ -42,3 +42,34 @@ export type DbResult<T> = {
   data: T | null
   error: Error | null
 }
+
+// Chat types
+export interface Message {
+  id: string
+  role: "user" | "assistant" | "system"
+  content: string
+  timestamp: Date
+  isStreaming?: boolean
+}
+
+export interface Conversation {
+  id: string
+  title: string
+  lastMessage?: string
+  timestamp: Date
+  messageCount: number
+}
+
+export interface UserProfile {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+}
+
+export interface ChatSettings {
+  theme: "light" | "dark" | "system"
+  fontSize: "small" | "medium" | "large"
+  sendOnEnter: boolean
+  voiceEnabled: boolean
+}

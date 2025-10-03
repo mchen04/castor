@@ -76,3 +76,6 @@ context/
 .claude/
 CLAUDE.md
 docs/
+
+# V0 prototype (keep local for reference)
+castor-chatbot/
