@@ -1,19 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useUser, useClerk } from "@clerk/nextjs"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatHeader } from "./chat-header"
 import { ChatMessages } from "./chat-messages"
 import { ChatInput } from "./chat-input"
 import { useChat } from "@/hooks/use-chat"
 import { useConversations } from "@/hooks/use-conversations"
-import type { ChatSettings } from "@/lib/types"
+import type { ChatSettings, UserProfile } from "@/lib/types"
 
 interface ChatLayoutProps {
   userId: string
 }
 
 export function ChatLayout({ userId }: ChatLayoutProps) {
+  const { user } = useUser()
+  const { signOut } = useClerk()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [settings, setSettings] = useState<ChatSettings>({
     theme: "dark",
@@ -21,6 +24,16 @@ export function ChatLayout({ userId }: ChatLayoutProps) {
     sendOnEnter: true,
     voiceEnabled: true,
   })
+
+  // Transform Clerk user to UserProfile format
+  const userProfile: UserProfile | null = user
+    ? {
+        id: user.id,
+        name: user.fullName || user.firstName || "User",
+        email: user.primaryEmailAddress?.emailAddress || "",
+        avatar: user.imageUrl,
+      }
+    : null
 
   const {
     conversations,
@@ -82,12 +95,14 @@ export function ChatLayout({ userId }: ChatLayoutProps) {
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         settings={settings}
         onSettingsChange={setSettings}
+        user={userProfile}
+        onLogout={() => signOut({ redirectUrl: '/' })}
       />
 
       {/* Main Chat Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         <ChatHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <ChatMessages messages={messages} isLoading={isLoading} />
+        <ChatMessages messages={messages} isLoading={isLoading} user={userProfile} />
         <ChatInput onSendMessage={sendMessage} isLoading={isLoading} />
       </div>
     </div>

@@ -3,8 +3,7 @@
 import { useEffect, useRef } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import type { Message } from "@/lib/types"
-import { mockUser } from "@/lib/mock-data"
+import type { Message, UserProfile } from "@/lib/types"
 import { Copy, Check } from "lucide-react"
 import { useState } from "react"
 import ReactMarkdown from "react-markdown"
@@ -12,9 +11,10 @@ import ReactMarkdown from "react-markdown"
 interface ChatMessagesProps {
   messages: Message[]
   isLoading: boolean
+  user: UserProfile | null
 }
 
-export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
+export function ChatMessages({ messages, isLoading, user }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
     <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarGutter: "stable" }}>
       <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
         {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
+          <MessageBubble key={message.id} message={message} user={user} />
         ))}
         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
           <div className="flex items-start gap-4">
@@ -52,7 +52,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
   )
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({ message, user }: { message: Message; user: UserProfile | null }) {
   const [copied, setCopied] = useState(false)
   const isUser = message.role === "user"
 
@@ -67,12 +67,12 @@ function MessageBubble({ message }: { message: Message }) {
       <Avatar className="h-8 w-8 border border-border">
         {isUser ? (
           <>
-            <AvatarImage src={mockUser.avatar || "/placeholder.svg"} alt={mockUser.name} />
+            <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
             <AvatarFallback className="bg-secondary text-secondary-foreground">
-              {mockUser.name
+              {user?.name
                 .split(" ")
                 .map((n) => n[0])
-                .join("")}
+                .join("") || "U"}
             </AvatarFallback>
           </>
         ) : (
@@ -82,7 +82,7 @@ function MessageBubble({ message }: { message: Message }) {
 
       <div className="flex-1 space-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">{isUser ? mockUser.name : "Castor AI"}</span>
+          <span className="text-sm font-semibold text-foreground">{isUser ? (user?.name || "User") : "Castor AI"}</span>
           <span className="text-xs text-muted-foreground">
             {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>

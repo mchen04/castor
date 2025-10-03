@@ -19,8 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { Conversation, ChatSettings } from "@/lib/types"
-import { mockUser } from "@/lib/mock-data"
+import type { Conversation, ChatSettings, UserProfile } from "@/lib/types"
 import {
   PanelLeft,
   Plus,
@@ -47,6 +46,8 @@ interface ChatSidebarProps {
   onToggle: () => void
   settings: ChatSettings
   onSettingsChange: (settings: ChatSettings) => void
+  user: UserProfile | null
+  onLogout: () => void
 }
 
 export function ChatSidebar({
@@ -60,6 +61,8 @@ export function ChatSidebar({
   onToggle,
   settings,
   onSettingsChange,
+  user,
+  onLogout,
 }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
@@ -220,17 +223,17 @@ export function ChatSidebar({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-auto w-full justify-start gap-3 p-2 hover:bg-sidebar-accent">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={mockUser.avatar || "/placeholder.svg"} alt={mockUser.name} />
+                  <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-                    {mockUser.name
+                    {user?.name
                       .split(" ")
                       .map((n) => n[0])
-                      .join("")}
+                      .join("") || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex min-w-0 flex-1 flex-col items-start">
-                  <span className="truncate text-sm font-medium text-sidebar-foreground">{mockUser.name}</span>
-                  <span className="truncate text-xs text-sidebar-foreground/60">{mockUser.email}</span>
+                  <span className="truncate text-sm font-medium text-sidebar-foreground">{user?.name || "User"}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/60">{user?.email || ""}</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -244,7 +247,7 @@ export function ChatSidebar({
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive">
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>
