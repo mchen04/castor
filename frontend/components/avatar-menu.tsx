@@ -1,7 +1,7 @@
 'use client'
 
 import { useClerk } from '@clerk/nextjs'
-import { CreditCard, LogOut } from 'lucide-react'
+import { CreditCard, Home, LogOut } from 'lucide-react'
 import { UserMenu, UserMenuItem } from '@/components/user-menu'
 
 export function AvatarMenu() {
@@ -27,6 +27,11 @@ export function AvatarMenu() {
   }
 
   const menuItems: UserMenuItem[] = [
+    {
+      label: "Home",
+      icon: Home,
+      onClick: () => { window.location.href = '/' },
+    },
     {
       label: "Manage Subscription",
       icon: CreditCard,
