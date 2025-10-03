@@ -39,7 +39,6 @@ export function ChatLayout({ userId }: ChatLayoutProps) {
     sendMessage,
     clearMessages,
     loadMessages: setMessages,
-    conversationId,
   } = useChat({
     userId,
     conversationId: activeConversationId || undefined,
