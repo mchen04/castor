@@ -33,7 +33,7 @@ import {
   Edit2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useRouter } from "next/navigation"
+import { SettingsDialog } from "./settings-dialog"
 
 interface ChatSidebarProps {
   conversations: Conversation[]
@@ -60,11 +60,11 @@ export function ChatSidebar({
   user,
   onLogout,
 }: ChatSidebarProps) {
-  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [renamingConversation, setRenamingConversation] = useState<Conversation | null>(null)
   const [newTitle, setNewTitle] = useState("")
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const filteredConversations = conversations.filter((conv) =>
     conv.title.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -238,7 +238,7 @@ export function ChatSidebar({
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/settings')}>
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
@@ -281,6 +281,8 @@ export function ChatSidebar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   )
 }
