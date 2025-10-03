@@ -8,7 +8,8 @@ import { ChatMessages } from "./chat-messages"
 import { ChatInput } from "./chat-input"
 import { useChat } from "@/hooks/use-chat"
 import { useConversations } from "@/hooks/use-conversations"
-import type { ChatSettings, UserProfile } from "@/lib/types"
+import { useChatSettings } from "@/hooks/use-chat-settings"
+import type { UserProfile } from "@/lib/types"
 
 interface ChatLayoutProps {
   userId: string
@@ -18,12 +19,7 @@ export function ChatLayout({ userId }: ChatLayoutProps) {
   const { user } = useUser()
   const { signOut } = useClerk()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [settings, setSettings] = useState<ChatSettings>({
-    theme: "dark",
-    fontSize: "medium",
-    sendOnEnter: true,
-    voiceEnabled: true,
-  })
+  const { settings } = useChatSettings()
 
   // Transform Clerk user to UserProfile format
   const userProfile: UserProfile | null = user
@@ -93,8 +89,6 @@ export function ChatLayout({ userId }: ChatLayoutProps) {
         onRenameConversation={renameConversation}
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-        settings={settings}
-        onSettingsChange={setSettings}
         user={userProfile}
         onLogout={() => signOut({ redirectUrl: '/' })}
       />

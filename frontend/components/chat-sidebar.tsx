@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { Conversation, ChatSettings, UserProfile } from "@/lib/types"
+import type { Conversation, UserProfile } from "@/lib/types"
 import {
   PanelLeft,
   Plus,
@@ -33,7 +33,7 @@ import {
   Edit2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { SettingsDialog } from "./settings-dialog"
+import { useRouter } from "next/navigation"
 
 interface ChatSidebarProps {
   conversations: Conversation[]
@@ -44,8 +44,6 @@ interface ChatSidebarProps {
   onRenameConversation: (id: string, newTitle: string) => void
   isOpen: boolean
   onToggle: () => void
-  settings: ChatSettings
-  onSettingsChange: (settings: ChatSettings) => void
   user: UserProfile | null
   onLogout: () => void
 }
@@ -59,16 +57,14 @@ export function ChatSidebar({
   onRenameConversation,
   isOpen,
   onToggle,
-  settings,
-  onSettingsChange,
   user,
   onLogout,
 }: ChatSidebarProps) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [renamingConversation, setRenamingConversation] = useState<Conversation | null>(null)
   const [newTitle, setNewTitle] = useState("")
-  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const filteredConversations = conversations.filter((conv) =>
     conv.title.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -242,7 +238,7 @@ export function ChatSidebar({
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <DropdownMenuItem onClick={() => router.push('/settings')}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
@@ -285,13 +281,6 @@ export function ChatSidebar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <SettingsDialog
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        settings={settings}
-        onSettingsChange={onSettingsChange}
-      />
     </>
   )
 }
