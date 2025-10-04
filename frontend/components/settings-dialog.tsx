@@ -80,10 +80,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
             {/* Send on Enter */}
             <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Send on Enter</Label>
-                <p className="text-xs text-muted-foreground">Press Enter to send messages</p>
-              </div>
+              <Label className="text-sm font-medium">Send on Enter</Label>
               <Switch
                 checked={settings.sendOnEnter}
                 onCheckedChange={(checked) => updateSettings({ ...settings, sendOnEnter: checked })}
@@ -92,10 +89,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
             {/* Voice Input */}
             <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Voice Input</Label>
-                <p className="text-xs text-muted-foreground">Enable voice recording for messages</p>
-              </div>
+              <Label className="text-sm font-medium">Voice Input</Label>
               <Switch
                 checked={settings.voiceEnabled}
                 onCheckedChange={(checked) => updateSettings({ ...settings, voiceEnabled: checked })}
