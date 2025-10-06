@@ -163,7 +163,7 @@ export function ChatSidebar({
                 >
                   <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-sidebar-foreground/70" />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <h3 className="truncate text-sm font-medium text-sidebar-foreground">{conversation.title}</h3>
                       <span className="flex-shrink-0 text-xs text-sidebar-foreground/50">
                         {formatTimestamp(conversation.timestamp)}
@@ -214,36 +214,38 @@ export function ChatSidebar({
 
         {/* User Menu */}
         <div className="flex-shrink-0 border-t border-sidebar-border p-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-auto w-full justify-start gap-3 p-2 hover:bg-sidebar-accent">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
-                  <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-                    {user?.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("") || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex min-w-0 flex-1 flex-col items-start">
-                  <span className="truncate text-sm font-medium text-sidebar-foreground">{user?.name || "User"}</span>
-                  <span className="truncate text-xs text-sidebar-foreground/60">{user?.email || ""}</span>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-3 px-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="rounded-full hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                  <Avatar className="h-8 w-8 cursor-pointer">
+                    <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
+                    <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
+                      {user?.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("") || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm font-medium text-sidebar-foreground">{user?.name || "User"}</span>
+              <span className="truncate text-xs text-sidebar-foreground/60">{user?.email || ""}</span>
+            </div>
+          </div>
         </div>
       </aside>
 

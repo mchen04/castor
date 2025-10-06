@@ -44,7 +44,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t border-border bg-background">
+    <div className="bg-background">
       <div className="mx-auto max-w-3xl px-4 py-4">
         <form onSubmit={handleSubmit} className="relative">
           <div className="relative flex items-end gap-2">
@@ -62,7 +62,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
                 disabled={isLoading}
                 rows={1}
               />
-              <div className="absolute bottom-2 right-2 flex items-center gap-1">
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <Button
                   type="button"
                   variant="ghost"
