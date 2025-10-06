@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@assistant-ui/react/styles/index.css";
-@import "@assistant-ui/react/styles/themes/default.css";
+@import "@assistant-ui/react-ui/styles/index.css";
+@import "@assistant-ui/react-ui/styles/themes/default.css";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -21,7 +21,7 @@ export function useDifyRuntime(userId: string) {
         const lastMessage = messages[messages.length - 1];
         const query = lastMessage.content
           .filter((part) => part.type === "text")
-          .map((part) => (part as any).text)
+          .map((part) => (part.type === "text" ? part.text : ""))
           .join("");
 
         // Call existing Dify Edge Function

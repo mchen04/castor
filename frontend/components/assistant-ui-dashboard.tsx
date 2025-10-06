@@ -36,25 +36,20 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
     deleteConversation,
     renameConversation,
     selectConversation,
-    loadConversationMessages,
-    updateConversationId,
   } = useConversations({ userId });
 
   // New Dify runtime for assistant-ui
-  const { runtime, conversationId, setConversationId, resetConversation } = useDifyRuntime(userId);
+  const { runtime, setConversationId, resetConversation } = useDifyRuntime(userId);
 
   const handleNewChat = () => {
     createConversation();
     resetConversation(); // Reset for new conversation
   };
 
-  const handleSelectConversation = async (id: string) => {
+  const handleSelectConversation = (id: string) => {
     selectConversation(id);
     setConversationId(id);
-
-    // TODO: Load messages into assistant-ui runtime
-    // const messages = await loadConversationMessages(id);
-    // Need to implement message loading into runtime
+    // TODO: Implement message loading into assistant-ui runtime when needed
   };
 
   return (

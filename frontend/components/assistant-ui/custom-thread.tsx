@@ -1,7 +1,6 @@
 "use client";
 
 import { Thread } from "@assistant-ui/react-ui";
-import { MessageSquare } from "lucide-react";
 
 export function CustomThread() {
   return (
