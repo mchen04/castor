@@ -14,7 +14,6 @@ export function ChatHeader({ onToggleSidebar }: ChatHeaderProps) {
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleSidebar}>
           <PanelLeft className="h-5 w-5" />
         </Button>
-        <h2 className="text-sm font-medium text-foreground">GSO Strategy for E-commerce</h2>
       </div>
     </header>
   )

@@ -115,7 +115,7 @@ export function ChatSidebar({
         <div className="flex items-center justify-between border-b border-sidebar-border p-4">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-sidebar-primary" />
-            <h1 className="text-lg font-semibold text-sidebar-foreground">Castor GSO</h1>
+            <h1 className="text-lg font-semibold text-sidebar-foreground">Castor GEO</h1>
           </div>
           <Button
             variant="ghost"

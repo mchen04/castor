@@ -189,9 +189,9 @@ function EmptyState() {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-semibold text-foreground">Welcome to Castor GSO</h2>
+          <h2 className="text-2xl font-semibold text-foreground">Welcome to Castor GEO</h2>
           <p className="text-balance text-muted-foreground">
-            Your AI-powered assistant for Generative Search Optimization. Ask me anything about GSO strategies, content
+            Your AI-powered assistant for Generative Search Optimization. Ask me anything about GEO strategies, content
             optimization, or AI search trends.
           </p>
         </div>

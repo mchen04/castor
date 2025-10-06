@@ -54,7 +54,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask me anything about GSO..."
+                placeholder="Ask me anything about GEO..."
                 className={cn(
                   "h-[52px] resize-none pr-24 py-3 text-base leading-relaxed overflow-y-auto",
                   "focus-visible:ring-1 focus-visible:ring-ring",
@@ -82,9 +82,6 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
               </div>
             </div>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Press <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono">Enter</kbd> to send
-          </p>
         </form>
       </div>
     </div>
