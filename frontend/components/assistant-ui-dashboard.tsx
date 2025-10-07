@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { ThreadListSidebar } from "@/components/assistant-ui/threadlist-sidebar";
+import { Thread } from "@/components/assistant-ui/thread";
 import { useDifyRuntime } from "@/lib/assistant-ui/dify-runtime";
-import { CustomThread } from "@/components/assistant-ui/custom-thread";
-import { ChatSidebar } from "@/components/chat-sidebar";
-import { useConversations } from "@/hooks/use-conversations";
 import type { UserProfile } from "@/lib/types";
 
 interface AssistantUIDashboardProps {
@@ -16,7 +15,6 @@ interface AssistantUIDashboardProps {
 export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
   const { user } = useUser();
   const { signOut } = useClerk();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Transform Clerk user to UserProfile format
   const userProfile: UserProfile | null = user
@@ -28,52 +26,23 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
       }
     : null;
 
-  // Existing conversation management
-  const {
-    conversations,
-    activeConversationId,
-    createConversation,
-    deleteConversation,
-    renameConversation,
-    selectConversation,
-  } = useConversations({ userId });
-
-  // New Dify runtime for assistant-ui
-  const { runtime, setConversationId, resetConversation } = useDifyRuntime(userId);
-
-  const handleNewChat = () => {
-    createConversation();
-    resetConversation(); // Reset for new conversation
-  };
-
-  const handleSelectConversation = (id: string) => {
-    selectConversation(id);
-    setConversationId(id);
-    // TODO: Implement message loading into assistant-ui runtime when needed
-  };
+  // Dify runtime with multi-thread support
+  const { runtime } = useDifyRuntime(userId);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* Keep existing sidebar */}
-      <ChatSidebar
-        conversations={conversations}
-        activeConversationId={activeConversationId}
-        onSelectConversation={handleSelectConversation}
-        onNewChat={handleNewChat}
-        onDeleteConversation={deleteConversation}
-        onRenameConversation={renameConversation}
-        isOpen={isSidebarOpen}
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-        user={userProfile}
-        onLogout={() => signOut({ redirectUrl: "/" })}
-      />
-
-      {/* Replace entire chat area with assistant-ui */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <AssistantRuntimeProvider runtime={runtime}>
-          <CustomThread />
-        </AssistantRuntimeProvider>
-      </div>
-    </div>
+    <SidebarProvider>
+      <AssistantRuntimeProvider runtime={runtime}>
+        <div className="flex h-screen w-full">
+          <ThreadListSidebar
+            user={userProfile}
+            onLogout={() => signOut({ redirectUrl: "/" })}
+          />
+          <SidebarInset>
+            <SidebarTrigger className="absolute top-4 left-4 md:hidden" />
+            <Thread />
+          </SidebarInset>
+        </div>
+      </AssistantRuntimeProvider>
+    </SidebarProvider>
   );
 }

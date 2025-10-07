@@ -1,15 +1,17 @@
 "use client";
 
 import { useLocalRuntime } from "@assistant-ui/react";
+import { unstable_useRemoteThreadListRuntime as useRemoteThreadListRuntime } from "@assistant-ui/react";
 import { useSession } from "@clerk/nextjs";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import type { ChatModelAdapter } from "@assistant-ui/react";
+import { createDifyThreadListAdapter } from "./dify-thread-adapter";
 
 export function useDifyRuntime(userId: string) {
   const { session } = useSession();
   const [conversationId, setConversationId] = useState<string>("");
 
-  const adapter: ChatModelAdapter = useMemo(
+  const chatAdapter: ChatModelAdapter = useMemo(
     () => ({
       async *run({ messages, abortSignal }) {
         const token = await session?.getToken();
@@ -105,11 +107,19 @@ export function useDifyRuntime(userId: string) {
     [session, userId, conversationId]
   );
 
-  const runtime = useLocalRuntime(adapter);
+  // Create thread list adapter
+  const threadListAdapter = useMemo(
+    () => createDifyThreadListAdapter(userId, () => session?.getToken() || Promise.resolve(null)),
+    [userId, session]
+  );
 
-  const resetConversation = useCallback(() => {
-    setConversationId("");
-  }, []);
+  // Upgrade to RemoteThreadListRuntime for multi-thread support
+  const runtime = useRemoteThreadListRuntime({
+    runtimeHook: function useDifyThreadRuntime() {
+      return useLocalRuntime(chatAdapter);
+    },
+    adapter: threadListAdapter,
+  });
 
-  return { runtime, conversationId, setConversationId, resetConversation };
+  return { runtime };
 }
