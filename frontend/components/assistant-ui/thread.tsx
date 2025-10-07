@@ -118,8 +118,8 @@ const ThreadSuggestions: FC = () => {
     <div className="aui-thread-welcome-suggestions grid w-full gap-2 pb-4 @md:grid-cols-2">
       {[
         "What is Generative Search Optimization?",
-        "How can I optimize my content for AI search?",
-        "What are the best practices for structured data?",
+        "How to optimize content for AI search?",
+        "Best practices for structured data?",
         "Tell me about AI search trends in 2025",
       ].map((prompt, index) => (
         <m.div
