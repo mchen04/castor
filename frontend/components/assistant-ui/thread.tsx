@@ -135,7 +135,7 @@ const ThreadSuggestions: FC = () => {
             prompt={prompt}
             send
           >
-            <span className="line-clamp-2 text-center text-ellipsis text-sm font-semibold">
+            <span className="text-center text-sm font-semibold">
               {prompt}
             </span>
           </ThreadPrimitive.Suggestion>
@@ -153,7 +153,7 @@ const Composer: FC = () => {
         <ComposerAttachments />
         <ComposerPrimitive.Input
           placeholder="Send a message..."
-          className="aui-composer-input mb-1 max-h-40 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus:outline-primary"
+          className="aui-composer-input mb-1 max-h-40 w-full resize-none bg-transparent px-3.5 py-2 text-base outline-none placeholder:text-muted-foreground focus:outline-primary"
           rows={1}
           autoFocus
           aria-label="Message input"
