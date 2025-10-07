@@ -117,52 +117,27 @@ const ThreadSuggestions: FC = () => {
   return (
     <div className="aui-thread-welcome-suggestions grid w-full gap-2 pb-4 @md:grid-cols-2">
       {[
-        {
-          title: "What is Generative",
-          label: "Search Optimization?",
-          action: "What is Generative Search Optimization?",
-        },
-        {
-          title: "How can I optimize",
-          label: "my content for AI search?",
-          action: "How can I optimize my content for AI search?",
-        },
-        {
-          title: "Best practices for",
-          label: "structured data",
-          action: "What are the best practices for structured data?",
-        },
-        {
-          title: "AI search trends",
-          label: "in 2025",
-          action: "Tell me about AI search trends in 2025",
-        },
-      ].map((suggestedAction, index) => (
+        "What is Generative Search Optimization?",
+        "How can I optimize my content for AI search?",
+        "What are the best practices for structured data?",
+        "Tell me about AI search trends in 2025",
+      ].map((prompt, index) => (
         <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.05 * index }}
-          key={`suggested-action-${suggestedAction.title}-${index}`}
+          key={`suggested-action-${index}`}
           className="aui-thread-welcome-suggestion-display [&:nth-child(n+3)]:hidden @md:[&:nth-child(n+3)]:block"
         >
           <ThreadPrimitive.Suggestion
-            prompt={suggestedAction.action}
+            className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors"
+            prompt={prompt}
             send
-            asChild
           >
-            <Button
-              variant="ghost"
-              className="aui-thread-welcome-suggestion h-auto w-full flex-1 items-center gap-1 rounded-3xl border px-5 py-4 text-left text-sm dark:hover:bg-accent/60"
-              aria-label={suggestedAction.action}
-            >
-              <span className="aui-thread-welcome-suggestion-text-1 font-medium">
-                {suggestedAction.title}
-              </span>
-              <span className="aui-thread-welcome-suggestion-text-2 text-muted-foreground">
-                {suggestedAction.label}
-              </span>
-            </Button>
+            <span className="line-clamp-2 text-center text-ellipsis text-sm font-semibold">
+              {prompt}
+            </span>
           </ThreadPrimitive.Suggestion>
         </m.div>
       ))}
@@ -178,7 +153,7 @@ const Composer: FC = () => {
         <ComposerAttachments />
         <ComposerPrimitive.Input
           placeholder="Send a message..."
-          className="aui-composer-input mb-1 max-h-32 min-h-10 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus:outline-primary"
+          className="aui-composer-input mb-1 max-h-40 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus:outline-primary"
           rows={1}
           autoFocus
           aria-label="Message input"
