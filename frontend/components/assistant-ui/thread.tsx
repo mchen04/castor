@@ -153,7 +153,7 @@ const ThreadSuggestions: FC = () => {
           >
             <Button
               variant="ghost"
-              className="aui-thread-welcome-suggestion h-auto w-full flex-1 flex-wrap items-start justify-start gap-1 rounded-3xl border px-5 py-4 text-left text-sm @md:flex-col dark:hover:bg-accent/60"
+              className="aui-thread-welcome-suggestion h-auto w-full flex-1 items-center gap-1 rounded-3xl border px-5 py-4 text-left text-sm dark:hover:bg-accent/60"
               aria-label={suggestedAction.action}
             >
               <span className="aui-thread-welcome-suggestion-text-1 font-medium">
@@ -178,7 +178,7 @@ const Composer: FC = () => {
         <ComposerAttachments />
         <ComposerPrimitive.Input
           placeholder="Send a message..."
-          className="aui-composer-input mb-1 max-h-32 min-h-16 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus:outline-primary"
+          className="aui-composer-input mb-1 max-h-32 min-h-10 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus:outline-primary"
           rows={1}
           autoFocus
           aria-label="Message input"
