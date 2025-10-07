@@ -1,5 +1,5 @@
 import * as React from "react";
-import { MessagesSquare, Search, LogOut } from "lucide-react";
+import { MessagesSquare, Search, LogOut, Home, CreditCard } from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
@@ -18,6 +18,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -39,6 +40,25 @@ export function ThreadListSidebar({
   ...props
 }: ThreadListSidebarProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  const handleManageSubscription = async () => {
+    try {
+      const response = await fetch('/api/customer-portal', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create portal session');
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+    }
+  };
 
   return (
     <Sidebar {...props}>
@@ -100,6 +120,15 @@ export function ThreadListSidebar({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => window.location.href = '/'}>
+                <Home className="mr-2 h-4 w-4" />
+                Home
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleManageSubscription}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Manage Subscription
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={onLogout}

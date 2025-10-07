@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PaywallCard } from '@/components/paywall-card'
 import { GracePeriodWarning } from '@/components/grace-period-warning'
-import { AvatarMenu } from '@/components/avatar-menu'
 import { AssistantUIDashboard } from '@/components/assistant-ui-dashboard'
 import { CheckoutVerifier } from '@/components/checkout-verifier'
 
@@ -58,20 +57,12 @@ export default async function DashboardPage() {
   return (
     <>
       <CheckoutVerifier />
-      <div className="h-screen w-screen relative overflow-hidden">
-        {/* Grace Period Warning (if applicable) */}
-        {userData?.in_grace_period && (
-          <div className="absolute top-0 left-0 right-0 z-50">
-            <GracePeriodWarning />
-          </div>
-        )}
-
-        {/* Assistant UI with Dify Integration */}
-        <AssistantUIDashboard userId={userId} />
-
-        {/* Avatar Menu */}
-        <AvatarMenu />
-      </div>
+      {userData?.in_grace_period && (
+        <div className="absolute top-0 left-0 right-0 z-50">
+          <GracePeriodWarning />
+        </div>
+      )}
+      <AssistantUIDashboard userId={userId} />
     </>
   )
 }
