@@ -25,16 +25,6 @@ export interface DifyMessage {
   created_at: number
 }
 
-export interface DifyConversation {
-  id: string
-  name: string
-  inputs: Record<string, unknown>
-  status: string
-  introduction: string
-  created_at: number
-  updated_at: number
-}
-
 export interface DifyMessagesResponse {
   limit: number
   has_more: boolean
@@ -44,44 +34,5 @@ export interface DifyMessagesResponse {
 export interface DifyConversationsResponse {
   limit: number
   has_more: boolean
-  data: DifyConversation[]
-}
-
-/**
- * Transform Dify message to UI message format
- * Each Dify message contains both user query and AI answer
- * We split them into separate messages for the UI
- */
-export function transformDifyMessages(difyMessages: DifyMessage[]): Message[] {
-  // Dify returns newest first, reverse to get chronological order BEFORE flatMap
-  return difyMessages
-    .reverse()
-    .flatMap((msg) => [
-      // User message
-      {
-        id: `${msg.id}-user`,
-        role: 'user' as const,
-        content: msg.query,
-        createdAt: new Date(msg.created_at * 1000),
-      },
-      // Assistant message
-      {
-        id: `${msg.id}-assistant`,
-        role: 'assistant' as const,
-        content: msg.answer,
-        createdAt: new Date(msg.created_at * 1000),
-      },
-    ])
-}
-
-/**
- * Transform Dify conversation to UI conversation format
- */
-export function transformDifyConversation(difyConv: DifyConversation): Conversation {
-  return {
-    id: difyConv.id,
-    name: difyConv.name || 'New Conversation',
-    created_at: difyConv.created_at,
-    updated_at: difyConv.updated_at,
-  }
+  data: Conversation[]
 }

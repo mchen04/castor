@@ -10,7 +10,7 @@ import { heroContent, visibilityMetrics } from "@/lib/content/landing-page-conte
 export function HeroSection() {
   return (
     <Section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
+      <div className="absolute inset-0 gradient-hero" />
       <div className="relative max-w-4xl mx-auto text-center space-y-10 py-20 lg:py-32">
         <Badge variant="secondary" className="text-sm font-medium">
           {heroContent.badge}

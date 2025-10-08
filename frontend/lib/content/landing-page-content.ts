@@ -238,14 +238,6 @@ export const finalCTAContent: FinalCTAContent = {
 }
 
 /**
- * Problem Section Statistics
- */
-export const problemSectionStats = [
-  "50%+ of searches answered by AI in 2025",
-  "ChatGPT gets 1B+ queries daily",
-]
-
-/**
  * Social Proof - Platform Logos
  */
 export const platformLogos = ["ChatGPT", "Perplexity", "Google", "Gemini"]

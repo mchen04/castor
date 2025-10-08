@@ -37,7 +37,7 @@ export function PaywallCard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-background relative overflow-hidden">
+    <div className="min-h-screen gradient-hero relative overflow-hidden">
       {/* Header with Brand Navigation */}
       <div className="p-6">
         <Brand />
