@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { Message, DifyMessagesResponse } from '@/lib/types/chat'
+import type { Message, DifyMessage, DifyMessagesResponse } from '@/lib/types/chat'
 
 interface UseDifyChatProps {
   userId: string
@@ -39,28 +39,44 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
 
     const loadHistory = async () => {
       try {
-        const response = await fetch(
-          `/api/dify/messages?conversationId=${conversationId}&limit=100`,
-          {
+        let allMessages: DifyMessage[] = []
+        let firstId: string | undefined = undefined
+        let hasMore = true
+
+        // Load all pages until has_more is false
+        while (hasMore) {
+          const url = `/api/dify/messages?conversationId=${conversationId}&limit=100${
+            firstId ? `&first_id=${firstId}` : ''
+          }`
+
+          const response = await fetch(url, {
             headers: {
               'Content-Type': 'application/json',
             },
             credentials: 'same-origin',
             signal: abortController.signal,
-          }
-        )
+          })
 
-        if (!response.ok) {
-          console.error('Failed to load conversation history:', response.statusText)
-          return
+          if (!response.ok) {
+            console.error('Failed to load conversation history:', response.statusText)
+            return
+          }
+
+          const result: DifyMessagesResponse = await response.json()
+          const pageMessages = result.data || []
+
+          allMessages = [...allMessages, ...pageMessages]
+          hasMore = result.has_more || false
+
+          // Get last message ID for next page
+          if (hasMore && pageMessages.length > 0) {
+            firstId = pageMessages[pageMessages.length - 1].id
+          }
         }
 
-        const result: DifyMessagesResponse = await response.json()
-        const difyMessages = result.data || []
-
-        // Transform Dify messages to UI format
+        // Transform all messages to UI format
         // Dify returns newest first, reverse to get chronological order BEFORE flatMap
-        const transformedMessages: Message[] = difyMessages
+        const transformedMessages: Message[] = allMessages
           .reverse()
           .flatMap((msg) => [
             {
