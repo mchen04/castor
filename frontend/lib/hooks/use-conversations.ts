@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@clerk/nextjs'
 import type { Conversation, DifyConversationsResponse } from '@/lib/types/chat'
 
 interface UseConversationsResult {
@@ -15,7 +14,6 @@ interface UseConversationsResult {
 }
 
 export function useConversations(userId: string): UseConversationsResult {
-  const { getToken } = useAuth()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -27,19 +25,13 @@ export function useConversations(userId: string): UseConversationsResult {
     setError(null)
 
     try {
-      // Get Clerk token for authentication
-      const token = await getToken()
-      if (!token) {
-        throw new Error('No authentication token available')
-      }
-
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-conversations?userId=${userId}&limit=100`,
+        `/api/dify/conversations?limit=100`,
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
+          credentials: 'same-origin',
         }
       )
 
@@ -65,7 +57,7 @@ export function useConversations(userId: string): UseConversationsResult {
     } finally {
       setIsLoading(false)
     }
-  }, [userId, getToken])
+  }, [userId])
 
   // Load conversations on mount
   useEffect(() => {
@@ -87,23 +79,16 @@ export function useConversations(userId: string): UseConversationsResult {
     if (!userId) return
 
     try {
-      // Get Clerk token for authentication
-      const token = await getToken()
-      if (!token) {
-        throw new Error('No authentication token available')
-      }
-
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-delete`,
+        `/api/dify/delete`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
+          credentials: 'same-origin',
           body: JSON.stringify({
             conversationId,
-            userId,
           }),
         }
       )
@@ -118,7 +103,7 @@ export function useConversations(userId: string): UseConversationsResult {
       console.error('Failed to delete conversation:', err)
       throw err
     }
-  }, [userId, getToken, loadConversations])
+  }, [userId, loadConversations])
 
   /**
    * Rename a conversation
@@ -127,24 +112,17 @@ export function useConversations(userId: string): UseConversationsResult {
     if (!userId) return
 
     try {
-      // Get Clerk token for authentication
-      const token = await getToken()
-      if (!token) {
-        throw new Error('No authentication token available')
-      }
-
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-rename`,
+        `/api/dify/rename`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
+          credentials: 'same-origin',
           body: JSON.stringify({
             conversationId,
             name: newName,
-            userId,
           }),
         }
       )
@@ -159,7 +137,7 @@ export function useConversations(userId: string): UseConversationsResult {
       console.error('Failed to rename conversation:', err)
       throw err
     }
-  }, [userId, getToken, loadConversations])
+  }, [userId, loadConversations])
 
   return {
     conversations,

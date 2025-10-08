@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useAuth } from '@clerk/nextjs'
 import type { Message, DifyMessagesResponse } from '@/lib/types/chat'
 
 interface UseDifyChatProps {
@@ -18,7 +17,6 @@ interface UseDifyChatResult {
 }
 
 export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDifyChatResult {
-  const { getToken } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -38,20 +36,13 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
 
     const loadHistory = async () => {
       try {
-        // Get Clerk token for authentication
-        const token = await getToken()
-        if (!token) {
-          console.warn('No token available for loading history')
-          return
-        }
-
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-messages?conversationId=${conversationId}&userId=${userId}&limit=100`,
+          `/api/dify/messages?conversationId=${conversationId}&limit=100`,
           {
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
             },
+            credentials: 'same-origin',
           }
         )
 
@@ -87,7 +78,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     }
 
     loadHistory()
-  }, [conversationId, userId, getToken])
+  }, [conversationId, userId])
 
   /**
    * Send a message and stream the response
@@ -125,24 +116,17 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     setMessages(prev => [...prev, assistantMessage])
 
     try {
-      // Get Clerk token for authentication
-      const token = await getToken()
-      if (!token) {
-        throw new Error('No authentication token available')
-      }
-
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-chat`,
+        `/api/dify/chat`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
+          credentials: 'same-origin',
           body: JSON.stringify({
             query,
             conversationId: conversationId || '',
-            userId,
           }),
           signal: abortControllerRef.current.signal,
         }
@@ -225,7 +209,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       setIsStreaming(false)
       abortControllerRef.current = null
     }
-  }, [userId, conversationId, getToken])
+  }, [userId, conversationId])
 
   /**
    * Cancel the current streaming request
