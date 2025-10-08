@@ -1,5 +1,5 @@
 import * as React from "react";
-import { MessagesSquare, Search, LogOut, Home, CreditCard } from "lucide-react";
+import { MessagesSquare, LogOut, Home, CreditCard } from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
@@ -12,7 +12,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { ThreadList } from "@/components/assistant-ui/thread-list";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -39,8 +38,6 @@ export function ThreadListSidebar({
   onLogout,
   ...props
 }: ThreadListSidebarProps) {
-  const [searchQuery, setSearchQuery] = React.useState("");
-
   const handleManageSubscription = async () => {
     try {
       const response = await fetch('/api/customer-portal', {
@@ -82,20 +79,6 @@ export function ThreadListSidebar({
           </SidebarMenu>
         </div>
       </SidebarHeader>
-
-      {/* Search Input */}
-      <div className="px-2 py-3 border-b">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
-          />
-        </div>
-      </div>
 
       <SidebarContent className="aui-sidebar-content px-2">
         <ThreadList />
