@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useSession } from '@clerk/nextjs'
+import { useAuth } from '@clerk/nextjs'
 import type { Message, DifyMessagesResponse } from '@/lib/types/chat'
 
 interface UseDifyChatProps {
@@ -18,7 +18,7 @@ interface UseDifyChatResult {
 }
 
 export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDifyChatResult {
-  const { session } = useSession()
+  const { getToken } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -30,7 +30,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
    * Load conversation history when conversation changes
    */
   useEffect(() => {
-    if (!conversationId || !userId || !session) {
+    if (!conversationId || !userId) {
       // New conversation - clear messages
       setMessages([])
       return
@@ -38,14 +38,19 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
 
     const loadHistory = async () => {
       try {
-        const token = await session.getToken()
-        if (!token) return
+        // Get Clerk token for authentication
+        const token = await getToken()
+        if (!token) {
+          console.warn('No token available for loading history')
+          return
+        }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-messages?conversationId=${conversationId}&limit=100`,
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-messages?conversationId=${conversationId}&userId=${userId}&limit=100`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
             },
           }
         )
@@ -82,14 +87,14 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     }
 
     loadHistory()
-  }, [conversationId, userId, session])
+  }, [conversationId, userId, getToken])
 
   /**
    * Send a message and stream the response
    * Returns the new conversation ID if this was a new conversation
    */
   const sendMessage = useCallback(async (query: string): Promise<string | null> => {
-    if (!session || !userId) {
+    if (!userId) {
       throw new Error('Not authenticated')
     }
 
@@ -120,9 +125,10 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     setMessages(prev => [...prev, assistantMessage])
 
     try {
-      const token = await session.getToken()
+      // Get Clerk token for authentication
+      const token = await getToken()
       if (!token) {
-        throw new Error('No authentication token')
+        throw new Error('No authentication token available')
       }
 
       const response = await fetch(
@@ -130,8 +136,8 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             query,
@@ -219,7 +225,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       setIsStreaming(false)
       abortControllerRef.current = null
     }
-  }, [session, userId, conversationId])
+  }, [userId, conversationId, getToken])
 
   /**
    * Cancel the current streaming request

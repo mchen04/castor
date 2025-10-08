@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSession } from '@clerk/nextjs'
+import { useAuth } from '@clerk/nextjs'
 import type { Conversation, DifyConversationsResponse } from '@/lib/types/chat'
 
 interface UseConversationsResult {
@@ -15,28 +15,30 @@ interface UseConversationsResult {
 }
 
 export function useConversations(userId: string): UseConversationsResult {
-  const { session } = useSession()
+  const { getToken } = useAuth()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
   const loadConversations = useCallback(async () => {
-    if (!userId || !session) return
+    if (!userId) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const token = await session.getToken()
+      // Get Clerk token for authentication
+      const token = await getToken()
       if (!token) {
-        throw new Error('No authentication token')
+        throw new Error('No authentication token available')
       }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/dify-conversations?userId=${userId}&limit=100`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
         }
       )
@@ -63,7 +65,7 @@ export function useConversations(userId: string): UseConversationsResult {
     } finally {
       setIsLoading(false)
     }
-  }, [userId, session])
+  }, [userId, getToken])
 
   // Load conversations on mount
   useEffect(() => {
@@ -82,12 +84,13 @@ export function useConversations(userId: string): UseConversationsResult {
    * Delete a conversation
    */
   const deleteConversation = useCallback(async (conversationId: string) => {
-    if (!session || !userId) return
+    if (!userId) return
 
     try {
-      const token = await session.getToken()
+      // Get Clerk token for authentication
+      const token = await getToken()
       if (!token) {
-        throw new Error('No authentication token')
+        throw new Error('No authentication token available')
       }
 
       const response = await fetch(
@@ -95,8 +98,8 @@ export function useConversations(userId: string): UseConversationsResult {
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             conversationId,
@@ -115,18 +118,19 @@ export function useConversations(userId: string): UseConversationsResult {
       console.error('Failed to delete conversation:', err)
       throw err
     }
-  }, [session, userId, loadConversations])
+  }, [userId, getToken, loadConversations])
 
   /**
    * Rename a conversation
    */
   const renameConversation = useCallback(async (conversationId: string, newName: string) => {
-    if (!session || !userId) return
+    if (!userId) return
 
     try {
-      const token = await session.getToken()
+      // Get Clerk token for authentication
+      const token = await getToken()
       if (!token) {
-        throw new Error('No authentication token')
+        throw new Error('No authentication token available')
       }
 
       const response = await fetch(
@@ -134,8 +138,8 @@ export function useConversations(userId: string): UseConversationsResult {
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             conversationId,
@@ -155,7 +159,7 @@ export function useConversations(userId: string): UseConversationsResult {
       console.error('Failed to rename conversation:', err)
       throw err
     }
-  }, [session, userId, loadConversations])
+  }, [userId, getToken, loadConversations])
 
   return {
     conversations,
