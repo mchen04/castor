@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from '@clerk/nextjs'
-import type { Conversation, DifyConversationsResponse, transformDifyConversation } from '@/lib/types/chat'
+import type { Conversation, DifyConversationsResponse } from '@/lib/types/chat'
 
 interface UseConversationsResult {
   conversations: Conversation[]

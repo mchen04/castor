@@ -6,15 +6,12 @@ import {
   ArrowUpIcon,
   CheckIcon,
   CopyIcon,
-  RefreshCwIcon,
   Square,
 } from "lucide-react"
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react"
 import * as m from "motion/react-m"
 import { Button } from "@/components/ui/button"
-// MarkdownText will be imported when we create a simple wrapper
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button"
-import { cn } from "@/lib/utils"
 import type { Message } from "@/lib/types/chat"
 
 interface ThreadProps {

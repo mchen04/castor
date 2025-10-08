@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSession } from '@clerk/nextjs'
-import type { Message, DifyMessagesResponse, transformDifyMessages } from '@/lib/types/chat'
+import type { Message, DifyMessagesResponse } from '@/lib/types/chat'
 
 interface UseDifyChatProps {
   userId: string
