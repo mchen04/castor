@@ -110,6 +110,8 @@ export class DifyClient {
    */
   async getMessages(params: DifyMessagesParams): Promise<Response> {
     const queryParams = new URLSearchParams({
+      conversation_id: params.conversationId,
+      user: params.userId,
       limit: String(params.limit || 50),
     })
 
@@ -118,7 +120,7 @@ export class DifyClient {
     }
 
     const response = await fetch(
-      `${DIFY_API_URL}/conversations/${params.conversationId}/messages?${queryParams.toString()}`,
+      `${DIFY_API_URL}/messages?${queryParams.toString()}`,
       {
         headers: this.getHeaders(),
       }
