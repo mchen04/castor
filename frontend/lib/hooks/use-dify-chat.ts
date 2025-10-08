@@ -59,20 +59,23 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
         const difyMessages = result.data || []
 
         // Transform Dify messages to UI format
-        const transformedMessages: Message[] = difyMessages.flatMap((msg) => [
-          {
-            id: `${msg.id}-user`,
-            role: 'user' as const,
-            content: msg.query,
-            createdAt: new Date(msg.created_at * 1000),
-          },
-          {
-            id: `${msg.id}-assistant`,
-            role: 'assistant' as const,
-            content: msg.answer,
-            createdAt: new Date(msg.created_at * 1000),
-          },
-        ]).reverse()
+        // Dify returns newest first, reverse to get chronological order BEFORE flatMap
+        const transformedMessages: Message[] = difyMessages
+          .reverse()
+          .flatMap((msg) => [
+            {
+              id: `${msg.id}-user`,
+              role: 'user' as const,
+              content: msg.query,
+              createdAt: new Date(msg.created_at * 1000),
+            },
+            {
+              id: `${msg.id}-assistant`,
+              role: 'assistant' as const,
+              content: msg.answer,
+              createdAt: new Date(msg.created_at * 1000),
+            },
+          ])
 
         setMessages(transformedMessages)
       } catch (err) {

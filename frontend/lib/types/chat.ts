@@ -53,22 +53,25 @@ export interface DifyConversationsResponse {
  * We split them into separate messages for the UI
  */
 export function transformDifyMessages(difyMessages: DifyMessage[]): Message[] {
-  return difyMessages.flatMap((msg) => [
-    // User message
-    {
-      id: `${msg.id}-user`,
-      role: 'user' as const,
-      content: msg.query,
-      createdAt: new Date(msg.created_at * 1000),
-    },
-    // Assistant message
-    {
-      id: `${msg.id}-assistant`,
-      role: 'assistant' as const,
-      content: msg.answer,
-      createdAt: new Date(msg.created_at * 1000),
-    },
-  ]).reverse() // Dify returns newest first, we want chronological order
+  // Dify returns newest first, reverse to get chronological order BEFORE flatMap
+  return difyMessages
+    .reverse()
+    .flatMap((msg) => [
+      // User message
+      {
+        id: `${msg.id}-user`,
+        role: 'user' as const,
+        content: msg.query,
+        createdAt: new Date(msg.created_at * 1000),
+      },
+      // Assistant message
+      {
+        id: `${msg.id}-assistant`,
+        role: 'assistant' as const,
+        content: msg.answer,
+        createdAt: new Date(msg.created_at * 1000),
+      },
+    ])
 }
 
 /**
