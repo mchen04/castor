@@ -21,22 +21,22 @@ export function ComparisonCard({
 }: ComparisonCardProps) {
   const variantStyles = {
     default: {
-      card: "border-muted-foreground/20 bg-muted/10 border-2",
+      card: "bg-card border shadow-lg hover:shadow-xl",
       iconBg: "bg-muted",
       iconColor: "text-muted-foreground",
       title: "",
       stat: "",
     },
     accent: {
-      card: "border-accent/50 bg-accent/5 border-2",
-      iconBg: "bg-accent/20",
+      card: "bg-card border-2 border-accent/20 shadow-xl hover:shadow-2xl",
+      iconBg: "bg-accent/10",
       iconColor: "text-accent",
       title: "text-accent",
       stat: "text-accent font-semibold",
     },
     primary: {
-      card: "border-primary/50 bg-primary/5 border-2",
-      iconBg: "bg-primary/20",
+      card: "bg-card border-2 border-primary/20 shadow-xl hover:shadow-2xl",
+      iconBg: "bg-primary/10",
       iconColor: "text-primary",
       title: "text-primary",
       stat: "text-primary font-semibold",
@@ -48,7 +48,7 @@ export function ComparisonCard({
   return (
     <Card
       className={cn(
-        "text-center p-8 h-full flex flex-col",
+        "text-center p-10 h-full flex flex-col transition-all",
         styles.card,
         highlighted && "ring-2 ring-accent ring-offset-2"
       )}

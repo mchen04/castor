@@ -53,7 +53,7 @@ export const visibilityMetrics: VisibilityMetric[] = [
     icon: Globe,
     label: "Google AI Overviews",
     progress: 66,
-    colorClass: "bg-chart-3",
+    colorClass: "bg-secondary",
   },
 ]
 
@@ -122,13 +122,13 @@ export const solutionFeatures: FeatureCardData[] = [
     icon: TrendingUp,
     title: "Always Up-to-Date with Latest Research",
     description: "Updated weekly with new GEO findings and tactics as the field evolves—your consultant never goes stale",
-    iconColor: "chart-3",
+    iconColor: "secondary",
   },
   {
     icon: Users,
     title: "24/7 Access, No Appointments",
     description: "Ask unlimited questions anytime—no scheduling calls, no hourly rates, no waiting for consultant availability",
-    iconColor: "chart-4",
+    iconColor: "warning",
   },
 ]
 
@@ -215,7 +215,7 @@ export const howItWorksSteps: HowItWorksStep[] = [
     number: 3,
     title: "Implement Strategies Immediately",
     description: "Apply proven tactics to optimize your content for ChatGPT, Perplexity, and other AI platforms",
-    colorClass: "bg-chart-3 text-background",
+    colorClass: "bg-warning text-warning-foreground",
   },
 ]
 

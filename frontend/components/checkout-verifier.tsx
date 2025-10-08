@@ -73,8 +73,8 @@ export function CheckoutVerifier() {
 
           {status === 'success' && (
             <>
-              <CheckCircle2 className="h-12 w-12 text-green-500" />
-              <h3 className="text-lg font-semibold text-green-500">{message}</h3>
+              <CheckCircle2 className="h-12 w-12 text-accent" />
+              <h3 className="text-lg font-semibold text-accent">{message}</h3>
               <p className="text-sm text-muted-foreground">
                 Redirecting you to your dashboard...
               </p>
@@ -83,8 +83,8 @@ export function CheckoutVerifier() {
 
           {status === 'error' && (
             <>
-              <XCircle className="h-12 w-12 text-red-500" />
-              <h3 className="text-lg font-semibold text-red-500">Verification Failed</h3>
+              <XCircle className="h-12 w-12 text-destructive" />
+              <h3 className="text-lg font-semibold text-destructive">Verification Failed</h3>
               <p className="text-sm text-muted-foreground">{message}</p>
               <button
                 onClick={() => router.refresh()}

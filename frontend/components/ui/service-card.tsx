@@ -28,22 +28,22 @@ interface ServiceCardProps {
 
 const variantStyles = {
   accent: {
-    card: "border-accent/50 bg-accent/5",
-    icon: "bg-accent/20 text-accent",
+    card: "bg-card border-2 border-accent/20 shadow-xl hover:shadow-2xl",
+    icon: "bg-accent/10 text-accent",
     price: "text-accent",
     checkIcon: "text-accent",
     badge: "bg-accent text-accent-foreground",
-    button: "bg-accent hover:bg-accent/90 text-accent-foreground",
-    buttonOutline: "border-accent text-accent hover:bg-accent hover:text-accent-foreground bg-transparent",
+    button: "bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg hover:shadow-xl",
+    buttonOutline: "border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground bg-card",
   },
   primary: {
-    card: "border-primary/50 bg-primary/5",
-    icon: "bg-primary/20 text-primary",
+    card: "bg-card border-2 border-primary/20 shadow-xl hover:shadow-2xl",
+    icon: "bg-primary/10 text-primary",
     price: "text-primary",
     checkIcon: "text-primary",
     badge: "bg-primary text-primary-foreground",
-    button: "bg-primary hover:bg-primary/90 text-primary-foreground",
-    buttonOutline: "border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent",
+    button: "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl",
+    buttonOutline: "border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-card",
   },
 }
 
@@ -64,7 +64,7 @@ export function ServiceCard({
   const styles = variantStyles[variant]
 
   return (
-    <Card className={cn("p-8 relative h-full", styles.card)}>
+    <Card className={cn("p-10 relative h-full transition-all", styles.card)}>
       {badge && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
           <Badge className={cn("px-4 py-1", styles.badge)}>{badge}</Badge>

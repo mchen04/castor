@@ -12,7 +12,7 @@ export function PricingComparisonSection() {
           subtitle="Professional agencies charge $6,000+/month because GEO is complex and requires deep expertise. Castor democratizes access to this knowledge."
         />
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 px-1">
           {pricingComparison.map((comparison, index) => (
             <ComparisonCard key={index} {...comparison} />
           ))}

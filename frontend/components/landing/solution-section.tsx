@@ -12,7 +12,7 @@ export function SolutionSection() {
           subtitle="Access the same knowledge base that professional agencies use to charge $6,000+/month. Research-backed, continuously updated, personalized to your needs."
         />
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {solutionFeatures.map((feature, index) => (
             <FeatureCard key={index} {...feature} />
           ))}

@@ -41,7 +41,7 @@ export interface FeatureCardData {
   icon: LucideIcon
   title: string
   description: string
-  iconColor: "primary" | "accent" | "chart-3" | "chart-4"
+  iconColor: "primary" | "accent" | "secondary" | "warning"
 }
 
 /**

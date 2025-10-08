@@ -12,7 +12,7 @@ export function ServicesSection() {
           subtitle="Get research-backed GEO expertise at a fraction of traditional consulting costs"
         />
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
           {serviceTiers.map((tier, index) => (
             <ServiceCard key={index} {...tier} />
           ))}

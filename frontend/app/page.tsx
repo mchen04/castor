@@ -30,11 +30,11 @@ export default function GEOLandingPage() {
             subtitle="Traditional SEO is dead. AI search is the new reality."
           />
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center p-8 border-muted-foreground/20 bg-muted/10 border-2">
-              <CardContent className="space-y-4">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
-                  <Search className="h-8 w-8 text-muted-foreground" />
+          <div className="grid md:grid-cols-3 gap-10">
+            <Card className="text-center p-10 bg-card border shadow-lg hover:shadow-xl transition-all">
+              <CardContent className="space-y-5">
+                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto">
+                  <Search className="h-10 w-10 text-muted-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold">Traditional SEO</h3>
                 <p className="text-muted-foreground">10 blue links</p>
@@ -42,24 +42,24 @@ export default function GEOLandingPage() {
               </CardContent>
             </Card>
 
-            <Card className="text-center p-8 border-primary/50 bg-primary/5 border-2">
-              <CardContent className="space-y-4">
-                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
-                  <Bot className="h-8 w-8 text-primary" />
+            <Card className="text-center p-10 bg-card border-2 border-primary/20 shadow-xl hover:shadow-2xl transition-all">
+              <CardContent className="space-y-5">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                  <Bot className="h-10 w-10 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold text-primary">AI Search</h3>
-                <p className="text-primary">1 synthesized answer</p>
+                <p className="text-primary font-medium">1 synthesized answer</p>
                 <p className="text-sm text-muted-foreground">AI provides the complete answer</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center p-8 border-accent/50 bg-accent/5 border-2">
-              <CardContent className="space-y-4">
-                <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto">
-                  <Target className="h-8 w-8 text-accent" />
+            <Card className="text-center p-10 bg-card border-2 border-accent/20 shadow-xl hover:shadow-2xl transition-all">
+              <CardContent className="space-y-5">
+                <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto">
+                  <Target className="h-10 w-10 text-accent" />
                 </div>
                 <h3 className="text-xl font-semibold text-accent">Your Challenge</h3>
-                <p className="text-accent">Be THE cited source</p>
+                <p className="text-accent font-medium">Be THE cited source</p>
                 <p className="text-sm text-muted-foreground">Get mentioned in AI responses</p>
               </CardContent>
             </Card>
@@ -86,9 +86,9 @@ export default function GEOLandingPage() {
       {/* How It Works */}
       <Section>
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-16">How It Works</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-20">How It Works</h2>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12">
             {howItWorksSteps.map((step) => (
               <div key={step.number} className="space-y-4">
                 <div

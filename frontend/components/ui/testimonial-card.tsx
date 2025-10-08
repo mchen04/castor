@@ -9,15 +9,15 @@ interface TestimonialCardProps {
 
 export function TestimonialCard({ quote, author, rating = 5 }: TestimonialCardProps) {
   return (
-    <Card className="p-6">
-      <CardContent className="space-y-4">
+    <Card className="p-8 bg-card border shadow-lg hover:shadow-xl transition-all">
+      <CardContent className="space-y-5">
         <div className="flex items-center gap-1">
           {[...Array(rating)].map((_, i) => (
-            <Star key={i} className="h-4 w-4 fill-accent text-accent" />
+            <Star key={i} className="h-5 w-5 fill-accent text-accent" />
           ))}
         </div>
-        <p className="text-sm">{quote}</p>
-        <div className="text-sm text-muted-foreground">— {author}</div>
+        <p className="text-base leading-relaxed">{quote}</p>
+        <div className="text-sm text-muted-foreground font-medium">— {author}</div>
       </CardContent>
     </Card>
   )

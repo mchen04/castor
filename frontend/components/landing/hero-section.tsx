@@ -10,13 +10,13 @@ import { heroContent, visibilityMetrics } from "@/lib/content/landing-page-conte
 export function HeroSection() {
   return (
     <Section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
-      <div className="relative max-w-4xl mx-auto text-center space-y-8 py-12 lg:py-20">
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
+      <div className="relative max-w-4xl mx-auto text-center space-y-10 py-20 lg:py-32">
         <Badge variant="secondary" className="text-sm font-medium">
           {heroContent.badge}
         </Badge>
 
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-balance">
           Expert GEO Consulting, Without the{" "}
           <span className="text-primary">$6,000/Month</span> Price Tag
         </h1>
@@ -25,12 +25,12 @@ export function HeroSection() {
           {heroContent.subheadline}
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
+        <div className="flex flex-col sm:flex-row gap-5 justify-center items-center w-full pt-4">
           <div className="w-full sm:w-auto">
             <Button
               asChild
               size="lg"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-4 sm:px-8 py-6 text-sm sm:text-base md:text-lg whitespace-normal sm:whitespace-nowrap w-full sm:w-auto"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-6 sm:px-10 py-7 text-base sm:text-lg whitespace-normal sm:whitespace-nowrap w-full sm:w-auto shadow-lg hover:shadow-xl transition-all"
             >
               <Link href={heroContent.primaryCTA.href}>
                 {heroContent.primaryCTA.text}
@@ -39,7 +39,7 @@ export function HeroSection() {
             </Button>
           </div>
           <div className="w-full sm:w-auto">
-            <Button variant="outline" size="lg" className="px-4 sm:px-8 py-6 text-sm sm:text-base md:text-lg bg-transparent whitespace-normal sm:whitespace-nowrap w-full sm:w-auto" asChild>
+            <Button variant="outline" size="lg" className="px-6 sm:px-10 py-7 text-base sm:text-lg bg-card border-2 hover:bg-muted/50 whitespace-normal sm:whitespace-nowrap w-full sm:w-auto transition-all" asChild>
               <a href={heroContent.secondaryCTA.href}>{heroContent.secondaryCTA.text}</a>
             </Button>
           </div>
@@ -59,10 +59,10 @@ export function HeroSection() {
         </div>
 
         {/* AI Visibility Metrics Chart */}
-        <div className="pt-8">
+        <div className="pt-12">
           <div className="relative w-full max-w-2xl mx-auto">
-            <Card className="bg-card/50 backdrop-blur border-primary/20">
-              <CardContent className="p-8">
+            <Card className="bg-card border shadow-xl">
+              <CardContent className="p-10">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">AI Search Visibility</h3>
                   <Badge className="bg-primary text-primary-foreground">+150%</Badge>

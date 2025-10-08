@@ -113,7 +113,7 @@ export function Header() {
                       <Button
                         variant="outline"
                         size="lg"
-                        className="w-full bg-transparent justify-start text-red-600 border-red-600/50 hover:bg-red-600/10"
+                        className="w-full bg-card justify-start text-destructive border-destructive/50 hover:bg-destructive/10"
                         onClick={() => signOut({ redirectUrl: '/' })}
                       >
                         <LogOut className="mr-2 h-5 w-5" />

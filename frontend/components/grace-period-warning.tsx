@@ -12,11 +12,11 @@ export function GracePeriodWarning() {
   }
 
   return (
-    <div className="mb-6 rounded-lg border border-yellow-500 bg-yellow-50 p-4">
-      <div className="flex items-start gap-3">
+    <div className="mb-6 rounded-lg border-2 border-warning/30 bg-warning/5 p-6">
+      <div className="flex items-start gap-4">
         <div className="flex-shrink-0">
           <svg
-            className="h-5 w-5 text-yellow-600"
+            className="h-6 w-6 text-warning"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={2}
@@ -30,14 +30,14 @@ export function GracePeriodWarning() {
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-yellow-800">Payment Issue</h3>
-          <p className="mt-1 text-sm text-yellow-700">
+          <h3 className="font-semibold text-warning">Payment Issue</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
             We couldn&apos;t process your recent payment. Please update your
             payment method to continue your subscription.
           </p>
           <button
             onClick={handleUpdatePayment}
-            className="mt-3 inline-block rounded bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700"
+            className="mt-4 inline-block rounded-lg bg-warning px-6 py-3 text-sm font-semibold text-warning-foreground shadow-md hover:bg-warning/90 transition-all"
           >
             Update Payment Method
           </button>
