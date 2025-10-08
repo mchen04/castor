@@ -1,5 +1,5 @@
 import * as React from "react";
-import { MessagesSquare, LogOut, Home, CreditCard } from "lucide-react";
+import { MessagesSquare, LogOut, Home, CreditCard, PlusIcon, Trash2 } from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
@@ -11,7 +11,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { ThreadList } from "@/components/assistant-ui/thread-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -20,6 +19,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import type { Conversation } from "@/lib/types/chat";
 
 interface UserProfile {
   id: string;
@@ -31,11 +32,23 @@ interface UserProfile {
 interface ThreadListSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: UserProfile | null;
   onLogout: () => void;
+  conversations: Conversation[];
+  currentConversationId: string;
+  onNewConversation: () => void;
+  onSelectConversation: (id: string) => void;
+  onDeleteConversation: (id: string) => Promise<void>;
+  onRenameConversation: (id: string, newName: string) => Promise<void>;
 }
 
 export function ThreadListSidebar({
   user,
   onLogout,
+  conversations,
+  currentConversationId,
+  onNewConversation,
+  onSelectConversation,
+  onDeleteConversation,
+  onRenameConversation,
   ...props
 }: ThreadListSidebarProps) {
   const handleManageSubscription = async () => {
@@ -81,7 +94,29 @@ export function ThreadListSidebar({
       </SidebarHeader>
 
       <SidebarContent className="aui-sidebar-content px-2">
-        <ThreadList />
+        <div className="flex flex-col gap-1.5">
+          {/* New Thread Button */}
+          <Button
+            onClick={onNewConversation}
+            className="mt-3 flex items-center justify-start gap-1 rounded-lg px-2.5 py-2 text-start hover:bg-muted data-active:bg-muted"
+            variant="ghost"
+          >
+            <PlusIcon />
+            New Thread
+          </Button>
+
+          {/* Conversation List */}
+          {conversations.map((conversation) => (
+            <ConversationItem
+              key={conversation.id}
+              conversation={conversation}
+              isActive={conversation.id === currentConversationId}
+              onSelect={() => onSelectConversation(conversation.id)}
+              onDelete={() => onDeleteConversation(conversation.id)}
+              onRename={(newName) => onRenameConversation(conversation.id, newName)}
+            />
+          ))}
+        </div>
       </SidebarContent>
       <SidebarRail />
 
@@ -128,5 +163,86 @@ export function ThreadListSidebar({
         </div>
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+interface ConversationItemProps {
+  conversation: Conversation;
+  isActive: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+  onRename: (newName: string) => void;
+}
+
+function ConversationItem({
+  conversation,
+  isActive,
+  onSelect,
+  onDelete,
+  onRename,
+}: ConversationItemProps) {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editValue, setEditValue] = React.useState(conversation.name);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const handleRename = () => {
+    if (editValue.trim() && editValue !== conversation.name) {
+      onRename(editValue.trim());
+    }
+    setIsEditing(false);
+  };
+
+  return (
+    <div
+      className={`group flex items-center gap-2 rounded-lg transition-all hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+        isActive ? "bg-muted" : ""
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <button
+        onClick={onSelect}
+        className="flex-grow px-3 py-2 text-start min-w-0"
+      >
+        {isEditing ? (
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleRename();
+              if (e.key === "Escape") {
+                setEditValue(conversation.name);
+                setIsEditing(false);
+              }
+            }}
+            className="w-full text-sm bg-transparent border-none outline-none focus:outline-none"
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className="text-sm truncate block">
+            {conversation.name || "New Chat"}
+          </span>
+        )}
+      </button>
+
+      {/* Delete button - shows on hover */}
+      {(isHovered || isActive) && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (confirm(`Delete "${conversation.name}"?`)) {
+              onDelete();
+            }
+          }}
+          className="hover:text-destructive p-1 mr-2 transition-colors"
+          aria-label="Delete conversation"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
+    </div>
   );
 }

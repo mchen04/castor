@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       throw new Error('DIFY_API_KEY not configured')
     }
 
-    // Verify user authentication via Supabase
+    // Verify Clerk JWT via Supabase (configured as third-party auth provider)
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
       }
     )
 
+    // Get Clerk user ID from JWT sub claim
     const {
       data: { user },
       error: authError,
@@ -51,11 +52,14 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Extract Clerk user ID from JWT (sub claim contains clerk_id)
+    const clerkUserId = user.id
+
     // Verify user has paid subscription
     const { data: userData, error: userError } = await supabaseClient
       .from('users')
       .select('has_paid, stripe_subscription_status')
-      .eq('clerk_id', user.id)
+      .eq('clerk_id', clerkUserId)
       .single()
 
     if (
