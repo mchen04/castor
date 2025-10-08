@@ -34,6 +34,9 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       return
     }
 
+    // Create abort controller for this fetch
+    const abortController = new AbortController()
+
     const loadHistory = async () => {
       try {
         const response = await fetch(
@@ -43,6 +46,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
               'Content-Type': 'application/json',
             },
             credentials: 'same-origin',
+            signal: abortController.signal,
           }
         )
 
@@ -72,12 +76,26 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
 
         setMessages(transformedMessages)
       } catch (err) {
+        // Ignore abort errors
+        if (err instanceof Error && err.name === 'AbortError') {
+          return
+        }
         console.error('Error loading conversation history:', err)
         setError(err instanceof Error ? err : new Error('Failed to load history'))
       }
     }
 
     loadHistory()
+
+    // Cleanup: Cancel active streaming when conversation changes
+    return () => {
+      abortController.abort()
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+        abortControllerRef.current = null
+        setIsStreaming(false)
+      }
+    }
   }, [conversationId, userId])
 
   /**
