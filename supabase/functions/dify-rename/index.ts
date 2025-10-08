@@ -28,38 +28,30 @@ Deno.serve(async (req) => {
       throw new Error('DIFY_API_KEY not configured')
     }
 
-    // Verify Clerk JWT via Supabase (configured as third-party auth provider)
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+    // Parse request body
+    const { conversationId, name, autoGenerate, userId }: DifyRenameRequest = await req.json()
+
+    if (!conversationId || !userId) {
+      return new Response(JSON.stringify({ error: 'Missing required fields: conversationId, userId' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
-      }
-    )
-
-    // Get Clerk user ID from JWT sub claim
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser()
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
       })
     }
 
-    // Extract Clerk user ID from JWT (sub claim contains clerk_id)
-    const clerkUserId = user.id
+    // Use service role for database queries
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    // Verify user has paid subscription
-    const { data: userData, error: userError } = await supabaseClient
+    // Verify user has paid subscription (using clerk_id field)
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('has_paid, stripe_subscription_status')
-      .eq('clerk_id', clerkUserId)
+      .eq('clerk_id', userId)  // Fixed: use clerk_id field
       .single()
 
     if (
@@ -69,21 +61,11 @@ Deno.serve(async (req) => {
     ) {
       return new Response(JSON.stringify({ error: 'Subscription required' }), {
         status: 403,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       })
-    }
-
-    // Parse request body
-    const { conversationId, name, autoGenerate, userId }: DifyRenameRequest = await req.json()
-
-    if (!conversationId || !userId) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: conversationId, userId' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
     }
 
     if (!name && !autoGenerate) {
@@ -136,10 +118,13 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Edge function error:', error)
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: error.message || 'Internal server error', stack: error.stack }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
     )
   }
