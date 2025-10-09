@@ -199,7 +199,7 @@ const Composer: FC<ComposerProps> = ({
     <div className="aui-composer-wrapper sticky bottom-0 mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 overflow-visible rounded-t-3xl bg-background pb-4 md:pb-6">
       <form
         onSubmit={onSubmit}
-        className="aui-composer-root relative flex w-full flex-col rounded-3xl border border-border bg-muted px-1 shadow-lg dark:border-muted-foreground/15"
+        className="aui-composer-root relative flex w-full flex-col rounded-3xl bg-muted px-1 shadow-lg"
       >
         <textarea
           value={inputValue}
@@ -211,7 +211,7 @@ const Composer: FC<ComposerProps> = ({
             }
           }}
           placeholder="Send a message..."
-          className="aui-composer-input mb-1 max-h-40 w-full resize-none bg-transparent px-3.5 py-2 text-base outline-none placeholder:text-muted-foreground focus:outline-primary"
+          className="aui-composer-input mb-1 max-h-40 w-full resize-none bg-transparent px-3.5 py-2 text-base outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground"
           rows={1}
           autoFocus
           aria-label="Message input"
@@ -221,7 +221,7 @@ const Composer: FC<ComposerProps> = ({
             <button
               type="submit"
               disabled={!inputValue.trim()}
-              className="aui-composer-send size-[34px] rounded-full p-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="aui-composer-send size-[34px] rounded-full flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               aria-label="Send message"
             >
               <ArrowUpIcon className="aui-composer-send-icon size-5" />

@@ -194,7 +194,7 @@ function ConversationItem({
 
   return (
     <div
-      className={`group flex items-center gap-2 rounded-lg transition-all hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+      className={`group flex items-center gap-2 rounded-lg border transition-all hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
         isActive ? "bg-muted" : ""
       }`}
       onMouseEnter={() => setIsHovered(true)}
