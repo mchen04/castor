@@ -38,6 +38,9 @@ interface ThreadListSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => Promise<void>;
   onRenameConversation: (id: string, newName: string) => Promise<void>;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => Promise<void>;
 }
 
 export function ThreadListSidebar({
@@ -49,6 +52,9 @@ export function ThreadListSidebar({
   onSelectConversation,
   onDeleteConversation,
   onRenameConversation,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
   ...props
 }: ThreadListSidebarProps) {
   const handleManageSubscription = async () => {
@@ -116,6 +122,18 @@ export function ThreadListSidebar({
               onRename={(newName) => onRenameConversation(conversation.id, newName)}
             />
           ))}
+
+          {/* Load More Button */}
+          {hasMore && (
+            <Button
+              onClick={onLoadMore}
+              disabled={isLoadingMore}
+              className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"
+              variant="ghost"
+            >
+              {isLoadingMore ? 'Loading...' : 'Load More'}
+            </Button>
+          )}
         </div>
       </SidebarContent>
       <SidebarRail />

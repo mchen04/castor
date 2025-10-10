@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { useUser, useClerk } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,7 @@ export function Header() {
   const { user, isLoaded } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
+  const [open, setOpen] = useState(false)
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
@@ -67,7 +69,7 @@ export function Header() {
         </nav>
 
         {/* Mobile Navigation */}
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="sm">
               <Menu className="h-5 w-5" />
@@ -87,7 +89,10 @@ export function Header() {
               {navItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => scrollToSection(item.id)}
+                  onClick={() => {
+                    scrollToSection(item.id)
+                    setOpen(false)
+                  }}
                   className="text-left text-xl font-medium hover:text-primary transition-colors py-2"
                 >
                   {item.label}
@@ -105,7 +110,10 @@ export function Header() {
                         variant="outline"
                         size="lg"
                         className="w-full bg-transparent justify-start"
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => {
+                          router.push('/dashboard')
+                          setOpen(false)
+                        }}
                       >
                         <LayoutDashboard className="mr-2 h-5 w-5" />
                         Dashboard
@@ -114,7 +122,10 @@ export function Header() {
                         variant="outline"
                         size="lg"
                         className="w-full bg-card justify-start text-destructive border-destructive/50 hover:bg-destructive/10"
-                        onClick={() => signOut({ redirectUrl: '/' })}
+                        onClick={() => {
+                          signOut({ redirectUrl: '/' })
+                          setOpen(false)
+                        }}
                       >
                         <LogOut className="mr-2 h-5 w-5" />
                         Sign Out

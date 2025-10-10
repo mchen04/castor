@@ -233,6 +233,21 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
         reader.releaseLock()
       }
 
+      if (newConversationId && !conversationId) {
+        fetch('/api/dify/generate-title', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            conversationId: newConversationId,
+          }),
+        }).catch((err) => {
+          console.error('Failed to generate title:', err)
+        })
+      }
+
       return newConversationId
     } catch (err) {
       console.error('Failed to send message:', err)

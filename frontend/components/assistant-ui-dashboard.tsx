@@ -23,7 +23,10 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
   // Conversation management
   const {
     conversations,
+    isLoading: conversationsLoading,
+    hasMore,
     loadConversations,
+    loadMoreConversations,
     createConversation,
     deleteConversation,
     renameConversation,
@@ -89,6 +92,9 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
           onSelectConversation={handleSelectConversation}
           onDeleteConversation={handleDeleteConversation}
           onRenameConversation={renameConversation}
+          hasMore={hasMore}
+          isLoadingMore={conversationsLoading}
+          onLoadMore={loadMoreConversations}
         />
         <SidebarInset>
           <SidebarTrigger className="absolute top-4 left-4 md:hidden" />

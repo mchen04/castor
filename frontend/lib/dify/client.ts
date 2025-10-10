@@ -33,7 +33,6 @@ export interface DifyRenameRequest {
 
 /**
  * Centralized Dify API client
- * All methods return the raw Response object for flexible handling
  */
 export class DifyClient {
   private apiKey: string
@@ -54,7 +53,6 @@ export class DifyClient {
 
   /**
    * Send a chat message with streaming response
-   * Returns raw Response for SSE streaming
    */
   async sendChatMessage(params: DifyChatRequest): Promise<Response> {
     const response = await fetch(`${DIFY_API_URL}/chat-messages`, {
@@ -66,6 +64,7 @@ export class DifyClient {
         conversation_id: params.conversationId || '',
         response_mode: 'streaming',
         inputs: {},
+        auto_generate_name: false,
       }),
     })
 

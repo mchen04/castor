@@ -7,7 +7,9 @@ interface UseConversationsResult {
   conversations: Conversation[]
   isLoading: boolean
   error: Error | null
+  hasMore: boolean
   loadConversations: () => Promise<void>
+  loadMoreConversations: () => Promise<void>
   createConversation: () => string
   deleteConversation: (conversationId: string) => Promise<void>
   renameConversation: (conversationId: string, newName: string) => Promise<void>
@@ -17,6 +19,8 @@ export function useConversations(userId: string): UseConversationsResult {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [hasMore, setHasMore] = useState(false)
+  const [lastId, setLastId] = useState<string | undefined>(undefined)
 
   const loadConversations = useCallback(async () => {
     if (!userId) return
@@ -26,7 +30,7 @@ export function useConversations(userId: string): UseConversationsResult {
 
     try {
       const response = await fetch(
-        `/api/dify/conversations?limit=100`,
+        `/api/dify/conversations?limit=20`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -51,6 +55,12 @@ export function useConversations(userId: string): UseConversationsResult {
       }))
 
       setConversations(transformedConversations)
+      setHasMore(result.has_more || false)
+
+      // Set lastId for pagination (last conversation ID)
+      if (transformedConversations.length > 0) {
+        setLastId(transformedConversations[transformedConversations.length - 1].id)
+      }
     } catch (err) {
       console.error('Failed to load conversations:', err)
       setError(err instanceof Error ? err : new Error('Failed to load conversations'))
@@ -58,6 +68,53 @@ export function useConversations(userId: string): UseConversationsResult {
       setIsLoading(false)
     }
   }, [userId])
+
+  const loadMoreConversations = useCallback(async () => {
+    if (!userId || !lastId || !hasMore) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch(
+        `/api/dify/conversations?limit=20&last_id=${lastId}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin',
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result: DifyConversationsResponse = await response.json()
+      const difyConversations = result.data || []
+
+      // Transform and append new conversations
+      const transformedConversations: Conversation[] = difyConversations.map((conv) => ({
+        id: conv.id,
+        name: conv.name || 'New Conversation',
+        created_at: conv.created_at,
+        updated_at: conv.updated_at,
+      }))
+
+      setConversations(prev => [...prev, ...transformedConversations])
+      setHasMore(result.has_more || false)
+
+      // Update lastId for next pagination
+      if (transformedConversations.length > 0) {
+        setLastId(transformedConversations[transformedConversations.length - 1].id)
+      }
+    } catch (err) {
+      console.error('Failed to load more conversations:', err)
+      setError(err instanceof Error ? err : new Error('Failed to load more conversations'))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [userId, lastId, hasMore])
 
   // Load conversations on mount
   useEffect(() => {
@@ -143,7 +200,9 @@ export function useConversations(userId: string): UseConversationsResult {
     conversations,
     isLoading,
     error,
+    hasMore,
     loadConversations,
+    loadMoreConversations,
     createConversation,
     deleteConversation,
     renameConversation,
