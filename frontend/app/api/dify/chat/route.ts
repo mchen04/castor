@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { verifySubscription, AuthError } from '@/lib/auth/verify-subscription'
 import { DifyClient } from '@/lib/dify/client'
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/middleware/rate-limit'
 
 /**
  * POST /api/dify/chat
@@ -10,6 +11,22 @@ export async function POST(req: Request) {
   try {
     // Verify user has active subscription
     const user = await verifySubscription()
+
+    // Rate limiting (best practice: prevent abuse)
+    const rateLimit = checkRateLimit(user.clerkId, {
+      maxRequests: 30,     // 30 messages
+      windowMs: 60 * 1000, // per minute
+    })
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please wait a moment and try again.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimit),
+        }
+      )
+    }
 
     // Parse request body
     const body = await req.json()
@@ -22,12 +39,17 @@ export async function POST(req: Request) {
       )
     }
 
+    // Generate trace ID for distributed tracing (best practice)
+    const traceId = crypto.randomUUID()
+    console.log(`[${traceId}] Chat request from user ${user.clerkId}`)
+
     // Send message to Dify API
     const difyClient = new DifyClient()
     const difyResponse = await difyClient.sendChatMessage({
       query,
       userId: user.clerkId,
       conversationId: conversationId || undefined,
+      traceId,
     })
 
     // Forward the SSE stream from Dify to client

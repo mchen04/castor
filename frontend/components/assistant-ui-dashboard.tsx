@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useUser, useClerk } from "@clerk/nextjs"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { ThreadListSidebar } from "@/components/assistant-ui/threadlist-sidebar"
@@ -20,6 +20,9 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
   // Current conversation state
   const [currentConversationId, setCurrentConversationId] = useState("")
 
+  // Track if we're sending the first message to prevent re-render
+  const sendingFirstMessageRef = useRef(false)
+
   // Conversation management
   const {
     conversations,
@@ -33,7 +36,7 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
   } = useConversations(userId)
 
   // Chat state for current conversation
-  const { messages, isStreaming, sendMessage, cancelStream } = useDifyChat({
+  const { messages, isStreaming, sendMessage, stopAndRemoveMessage } = useDifyChat({
     userId,
     conversationId: currentConversationId,
   })
@@ -70,13 +73,22 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
 
   // Handle sending a message
   const handleSendMessage = async (query: string) => {
+    const isFirstMessage = !currentConversationId
+    if (isFirstMessage) {
+      sendingFirstMessageRef.current = true
+    }
+
     const newConversationId = await sendMessage(query)
 
     // If this created a new conversation, update current conversation ID
     if (newConversationId && !currentConversationId) {
       setCurrentConversationId(newConversationId)
-      // Reload conversation list to show the new conversation
-      await loadConversations()
+
+      // Defer conversation list reload to prevent re-render during streaming
+      setTimeout(async () => {
+        await loadConversations()
+        sendingFirstMessageRef.current = false
+      }, 500)
     }
   }
 
@@ -102,7 +114,7 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
             messages={messages}
             isStreaming={isStreaming}
             onSendMessage={handleSendMessage}
-            onCancelStream={cancelStream}
+            onStopAndRemove={stopAndRemoveMessage}
           />
         </SidebarInset>
       </div>

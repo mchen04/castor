@@ -1,9 +1,12 @@
+import { parseDifyError, isRetryableError } from './errors'
+
 const DIFY_API_URL = 'https://api.dify.ai/v1'
 
 export interface DifyChatRequest {
   query: string
   userId: string
   conversationId?: string
+  traceId?: string  // For distributed tracing
 }
 
 export interface DifyConversationsParams {
@@ -31,6 +34,11 @@ export interface DifyRenameRequest {
   autoGenerate?: boolean
 }
 
+export interface DifyStopRequest {
+  taskId: string
+  userId: string
+}
+
 /**
  * Centralized Dify API client
  */
@@ -53,27 +61,67 @@ export class DifyClient {
 
   /**
    * Send a chat message with streaming response
+   * Implements retry logic for transient failures (best practice)
    */
-  async sendChatMessage(params: DifyChatRequest): Promise<Response> {
-    const response = await fetch(`${DIFY_API_URL}/chat-messages`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify({
-        query: params.query,
-        user: params.userId,
-        conversation_id: params.conversationId || '',
-        response_mode: 'streaming',
-        inputs: {},
-        auto_generate_name: false,
-      }),
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Dify API error: ${response.status} - ${errorText}`)
+  async sendChatMessage(params: DifyChatRequest, retries = 3): Promise<Response> {
+    // Build headers with optional trace_id
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
     }
 
-    return response
+    // Add trace_id for distributed tracing (best practice)
+    if (params.traceId) {
+      headers['X-Trace-Id'] = params.traceId
+    }
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch(`${DIFY_API_URL}/chat-messages`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            query: params.query,
+            user: params.userId,
+            conversation_id: params.conversationId || '',
+            response_mode: 'streaming',
+            inputs: {},
+            auto_generate_name: true,  // Best practice: auto-generate descriptive titles
+            trace_id: params.traceId,  // Best practice: distributed tracing
+          }),
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          const status = response.status
+
+          // Check if error is retryable
+          if (attempt < retries && isRetryableError(status)) {
+            const delay = Math.pow(2, attempt) * 1000  // Exponential backoff: 1s, 2s, 4s
+            console.log(`Retrying after ${delay}ms (attempt ${attempt + 1}/${retries})`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+            continue  // Retry
+          }
+
+          // Not retryable or out of retries - throw user-friendly error
+          throw new Error(parseDifyError(status, errorText))
+        }
+
+        return response
+      } catch (error) {
+        // Network errors or other exceptions
+        if (attempt < retries) {
+          const delay = Math.pow(2, attempt) * 1000
+          console.log(`Network error, retrying after ${delay}ms`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue
+        }
+        throw error
+      }
+    }
+
+    // This should never be reached, but TypeScript needs it
+    throw new Error('Failed after all retries')
   }
 
   /**
@@ -111,7 +159,7 @@ export class DifyClient {
     const queryParams = new URLSearchParams({
       conversation_id: params.conversationId,
       user: params.userId,
-      limit: String(params.limit || 50),
+      limit: String(params.limit || 20),
     })
 
     if (params.firstId) {
@@ -168,6 +216,29 @@ export class DifyClient {
         body: JSON.stringify({
           name: params.name || undefined,
           auto_generate: params.autoGenerate || false,
+          user: params.userId,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Dify API error: ${response.status} - ${errorText}`)
+    }
+
+    return response
+  }
+
+  /**
+   * Stop generating a streaming response
+   */
+  async stopGeneration(params: DifyStopRequest): Promise<Response> {
+    const response = await fetch(
+      `${DIFY_API_URL}/chat-messages/${params.taskId}/stop`,
+      {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({
           user: params.userId,
         }),
       }

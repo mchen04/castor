@@ -7,36 +7,76 @@ import {
   CheckIcon,
   CopyIcon,
   Square,
+  BotIcon,
 } from "lucide-react"
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react"
 import * as m from "motion/react-m"
 import { Button } from "@/components/ui/button"
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button"
+import { LoadingDots } from "@/components/ui/loading-dots"
+import { useScrollToMessage } from "@/lib/hooks/use-scroll-to-message"
 import type { Message } from "@/lib/types/chat"
 
 interface ThreadProps {
   messages: Message[]
   isStreaming: boolean
   onSendMessage: (query: string) => Promise<void>
-  onCancelStream: () => void
+  onStopAndRemove: () => void
 }
 
 export const Thread: FC<ThreadProps> = ({
   messages,
   isStreaming,
   onSendMessage,
-  onCancelStream,
+  onStopAndRemove,
 }) => {
   const [inputValue, setInputValue] = useState("")
   const viewportRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const { scrollToBottom: scrollToBottomSmooth } = useScrollToMessage()
 
-  // Auto-scroll to bottom when new messages arrive
+  // Track previous message length to detect new messages
+  const prevMessageLengthRef = useRef(messages.length)
+  // Track previous messages to detect history load
+  const prevMessagesRef = useRef<Message[]>([])
+
+  // Scroll to user's message after sending (waits for DOM update)
   useEffect(() => {
-    if (viewportRef.current) {
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight
+    // Only scroll on new message, not on updates to existing messages
+    const newMessageAdded = messages.length > prevMessageLengthRef.current
+
+    if (newMessageAdded && messages.length >= 2) {
+      // Use requestAnimationFrame for proper timing after DOM update
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Find the second-to-last message (user's message)
+          // Last message is loading assistant response
+          const allMessages = viewportRef.current?.querySelectorAll('[data-role]')
+          const userMessage = allMessages?.[allMessages.length - 2]
+
+          if (userMessage) {
+            userMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        })
+      })
+
+      prevMessageLengthRef.current = messages.length
     }
   }, [messages])
+
+  // Scroll to bottom when loading conversation history
+  useEffect(() => {
+    const wasEmpty = prevMessagesRef.current.length === 0
+    const nowHasMessages = messages.length > 0
+    const allHistorical = messages.every(m => m.isHistorical)
+
+    if (wasEmpty && nowHasMessages && allHistorical) {
+      // History just loaded → scroll to bottom
+      scrollToBottomSmooth(viewportRef)
+    }
+
+    prevMessagesRef.current = messages
+  }, [messages, scrollToBottomSmooth])
 
   // Handle scroll to show/hide scroll button
   const handleScroll = () => {
@@ -94,7 +134,7 @@ export const Thread: FC<ThreadProps> = ({
               onInputChange={setInputValue}
               onSubmit={handleSubmit}
               isStreaming={isStreaming}
-              onCancel={onCancelStream}
+              onCancel={onStopAndRemove}
             />
           </div>
 
@@ -257,6 +297,21 @@ const AssistantMessage: FC<MessageProps> = ({ message }) => {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Show loading state (three dots with bot icon, no copy button)
+  if (message.isLoading) {
+    return (
+      <div
+        className="aui-assistant-message-root relative mx-auto w-full max-w-[var(--thread-max-width)] animate-in py-4 duration-150 ease-out fade-in slide-in-from-bottom-1 last:mb-24"
+        data-role="assistant"
+      >
+        <div className="aui-assistant-message-content mx-2 flex items-center gap-2 text-muted-foreground">
+          <BotIcon className="size-5" />
+          <LoadingDots />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className="aui-assistant-message-root relative mx-auto w-full max-w-[var(--thread-max-width)] animate-in py-4 duration-150 ease-out fade-in slide-in-from-bottom-1 last:mb-24"
@@ -266,11 +321,40 @@ const AssistantMessage: FC<MessageProps> = ({ message }) => {
         {message.content}
       </div>
 
-      <div className="aui-assistant-message-footer mt-2 ml-2 flex">
-        <TooltipIconButton tooltip="Copy" onClick={handleCopy}>
-          {copied ? <CheckIcon /> : <CopyIcon />}
-        </TooltipIconButton>
-      </div>
+      {/* Display generated files (images, documents, etc.) */}
+      {message.files && message.files.length > 0 && (
+        <div className="aui-assistant-message-files mt-3 mx-2 flex flex-wrap gap-2">
+          {message.files.map((file) => (
+            file.type === 'image' ? (
+              <img
+                key={file.id}
+                src={file.url}
+                alt="Generated image"
+                className="max-w-sm rounded-lg border shadow-sm"
+              />
+            ) : (
+              <a
+                key={file.id}
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted"
+              >
+                <span className="capitalize">{file.type} file</span>
+              </a>
+            )
+          ))}
+        </div>
+      )}
+
+      {/* Show copy button when message has content */}
+      {!message.isLoading && message.content && (
+        <div className="aui-assistant-message-footer mt-2 ml-2 flex gap-2">
+          <TooltipIconButton tooltip="Copy" onClick={handleCopy}>
+            {copied ? <CheckIcon /> : <CopyIcon />}
+          </TooltipIconButton>
+        </div>
+      )}
     </div>
   )
 }

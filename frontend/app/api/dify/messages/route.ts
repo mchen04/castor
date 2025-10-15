@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     // Parse query parameters
     const { searchParams } = new URL(req.url)
     const conversationId = searchParams.get('conversationId')
-    const limit = searchParams.get('limit') || '50'
+    const limit = searchParams.get('limit') || '20'
     const firstId = searchParams.get('first_id') || undefined
 
     if (!conversationId) {

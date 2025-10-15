@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { Message, DifyMessage, DifyMessagesResponse } from '@/lib/types/chat'
+import type { Message, MessageFile, DifyMessage, DifyMessagesResponse } from '@/lib/types/chat'
 
 interface UseDifyChatProps {
   userId: string
@@ -14,6 +14,7 @@ interface UseDifyChatResult {
   error: Error | null
   sendMessage: (query: string) => Promise<string | null>
   cancelStream: () => void
+  stopAndRemoveMessage: () => void
 }
 
 export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDifyChatResult {
@@ -24,6 +25,9 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
   // For canceling streaming
   const abortControllerRef = useRef<AbortController | null>(null)
 
+  // Track which conversation we have loaded
+  const loadedConversationIdRef = useRef<string | null>(null)
+
   /**
    * Load conversation history when conversation changes
    */
@@ -31,8 +35,18 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     if (!conversationId || !userId) {
       // New conversation - clear messages
       setMessages([])
+      loadedConversationIdRef.current = null
       return
     }
+
+    // Skip reload if we already loaded THIS conversation
+    // (happens when first message creates conversation ID)
+    if (messages.length > 0 && loadedConversationIdRef.current === conversationId) {
+      return
+    }
+
+    // Mark that we're loading this conversation
+    loadedConversationIdRef.current = conversationId
 
     // Create abort controller for this fetch
     const abortController = new AbortController()
@@ -84,12 +98,14 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
               role: 'user' as const,
               content: msg.query,
               createdAt: new Date(msg.created_at * 1000),
+              isHistorical: true,
             },
             {
               id: `${msg.id}-assistant`,
               role: 'assistant' as const,
               content: msg.answer,
               createdAt: new Date(msg.created_at * 1000),
+              isHistorical: true,
             },
           ])
 
@@ -115,6 +131,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
         setIsStreaming(false)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, userId])
 
   /**
@@ -139,6 +156,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       role: 'user',
       content: query,
       createdAt: new Date(),
+      isHistorical: false,
     }
     setMessages(prev => [...prev, userMessage])
 
@@ -149,6 +167,8 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       role: 'assistant',
       content: '',
       createdAt: new Date(),
+      isLoading: true,
+      isHistorical: false,
     }
     setMessages(prev => [...prev, assistantMessage])
 
@@ -183,6 +203,8 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       let buffer = ''
       let accumulatedText = ''
       let newConversationId: string | null = null
+      let currentTaskId: string | null = null
+      const messageFiles: MessageFile[] = []
 
       try {
         while (true) {
@@ -199,13 +221,46 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
                 const data = JSON.parse(line.slice(6))
 
                 switch (data.event) {
+                  case 'workflow_started':
+                    // Workflow execution started (Chatflow apps)
+                    console.log('Workflow started:', data.workflow_run_id)
+                    currentTaskId = data.task_id
+                    break
+
+                  case 'node_started':
+                    // Workflow node started executing
+                    console.log(`Node started: ${data.data.title}`)
+                    break
+
+                  case 'node_finished':
+                    // Workflow node finished executing
+                    if (data.data.status === 'failed') {
+                      console.error(`Node failed: ${data.data.title}`, data.data.error)
+                    }
+                    break
+
+                  case 'workflow_finished':
+                    // Workflow execution completed
+                    if (data.data.status === 'failed') {
+                      console.error('Workflow failed:', data.data.error)
+                    }
+                    break
+
                   case 'message':
                     // Accumulate text and update assistant message
                     accumulatedText += data.answer
+                    currentTaskId = data.task_id
+
                     setMessages(prev =>
                       prev.map(msg =>
                         msg.id === assistantMessageId
-                          ? { ...msg, content: accumulatedText }
+                          ? {
+                              ...msg,
+                              content: accumulatedText,
+                              isLoading: false,
+                              task_id: currentTaskId || undefined,
+                              files: messageFiles.length > 0 ? messageFiles : undefined,
+                            }
                           : msg
                       )
                     )
@@ -216,12 +271,74 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
                     }
                     break
 
+                  case 'message_file':
+                    // AI generated a file (image, document, etc.)
+                    messageFiles.push({
+                      id: data.id,
+                      type: data.type as MessageFile['type'],
+                      url: data.url,
+                      belongs_to: data.belongs_to as MessageFile['belongs_to'],
+                    })
+
+                    // Update message with new file
+                    setMessages(prev =>
+                      prev.map(msg =>
+                        msg.id === assistantMessageId
+                          ? { ...msg, files: [...messageFiles] }
+                          : msg
+                      )
+                    )
+                    break
+
+                  case 'message_replace':
+                    // Content moderation replaced the message
+                    accumulatedText = data.answer
+                    setMessages(prev =>
+                      prev.map(msg =>
+                        msg.id === assistantMessageId
+                          ? { ...msg, content: accumulatedText }
+                          : msg
+                      )
+                    )
+                    break
+
                   case 'message_end':
-                    // Streaming complete
+                    // Streaming complete - capture metadata (best practice)
+                    if (data.metadata?.usage) {
+                      const { total_tokens, total_price, currency } = data.metadata.usage
+                      console.log('[Token Usage]', {
+                        conversation_id: data.conversation_id,
+                        message_id: data.message_id,
+                        tokens: total_tokens,
+                        cost: total_price ? `${currency} ${total_price}` : 'N/A',
+                      })
+                      // TODO: Store in analytics/monitoring system if needed
+                    }
+                    break
+
+                  case 'tts_message':
+                    // TTS audio chunk (base64-encoded MP3)
+                    console.log('TTS audio chunk received')
+                    // TODO: If TTS is enabled, decode base64 and play audio
+                    // const audioChunk = atob(data.audio)
+                    // playAudioChunk(audioChunk)
+                    break
+
+                  case 'tts_message_end':
+                    // TTS streaming complete
+                    console.log('TTS audio streaming complete')
+                    break
+
+                  case 'ping':
+                    // Keep-alive ping (every 10 seconds)
                     break
 
                   case 'error':
                     throw new Error(data.message || 'Dify API error')
+
+                  default:
+                    // Log unknown events for debugging
+                    console.warn('Unknown SSE event type:', data.event)
                 }
               } catch (parseError) {
                 console.error('Failed to parse SSE event:', parseError)
@@ -233,20 +350,8 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
         reader.releaseLock()
       }
 
-      if (newConversationId && !conversationId) {
-        fetch('/api/dify/generate-title', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify({
-            conversationId: newConversationId,
-          }),
-        }).catch((err) => {
-          console.error('Failed to generate title:', err)
-        })
-      }
+      // Note: Title is now auto-generated by Dify (auto_generate_name: true)
+      // No need for manual title generation
 
       return newConversationId
     } catch (err) {
@@ -274,11 +379,57 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     }
   }, [])
 
+  /**
+   * Stop streaming and remove the incomplete message
+   */
+  const stopAndRemoveMessage = useCallback(() => {
+    // Get the task_id from the last assistant message
+    const lastMessage = messages[messages.length - 1]
+    const taskId = lastMessage?.role === 'assistant' ? lastMessage.task_id : null
+
+    // Cancel the stream locally
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+
+    // Call the stop API if we have a task_id
+    if (taskId) {
+      fetch('/api/dify/stop', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          taskId,
+        }),
+      }).catch((err) => {
+        // Ignore errors from stop API (already aborted locally)
+        console.log('Stop API call failed (already aborted locally):', err)
+      })
+    }
+
+    // Remove the last assistant message (incomplete response)
+    setMessages(prev => {
+      const lastMsg = prev[prev.length - 1]
+      // Check if last message is an incomplete assistant response
+      if (lastMsg?.role === 'assistant' && (lastMsg.isLoading || lastMsg.content.length > 0)) {
+        // Remove both user message and incomplete assistant response
+        return prev.slice(0, -2)
+      }
+      return prev
+    })
+
+    setIsStreaming(false)
+  }, [messages])
+
   return {
     messages,
     isStreaming,
     error,
     sendMessage,
     cancelStream,
+    stopAndRemoveMessage,
   }
 }
