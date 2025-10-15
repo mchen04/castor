@@ -270,6 +270,15 @@
   }
 }
 
+@keyframes typewriter-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 /* ============================================
    CUSTOM UTILITY CLASSES (Tailwind v4)
    ============================================ */
@@ -285,6 +294,10 @@
 
 @utility animate-slide-down {
   animation: slide-down 0.5s ease-out;
+}
+
+@utility animate-typewriter-blink {
+  animation: typewriter-blink 1s step-end infinite;
 }
 
 /* Hero Background Gradient */

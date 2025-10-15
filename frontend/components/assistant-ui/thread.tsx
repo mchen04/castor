@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button"
 import { LoadingDots } from "@/components/ui/loading-dots"
 import { useScrollToMessage } from "@/lib/hooks/use-scroll-to-message"
+import { useTypewriterText } from "@/lib/hooks/use-typewriter-text"
 import type { Message } from "@/lib/types/chat"
 
 interface ThreadProps {
@@ -290,11 +291,27 @@ interface MessageProps {
 
 const AssistantMessage: FC<MessageProps> = ({ message }) => {
   const [copied, setCopied] = useState(false)
+  const [skipRequested, setSkipRequested] = useState(false)
+
+  // Use typewriter effect for streaming messages, instant for historical
+  const { displayText, isTyping, skipAnimation } = useTypewriterText(
+    message.content,
+    {
+      speed: 20, // 20ms per character = 50 chars/sec (ChatGPT-style)
+      instant: message.isHistorical, // No animation for historical messages
+      skip: skipRequested,
+    }
+  )
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleSkip = () => {
+    setSkipRequested(true)
+    skipAnimation()
   }
 
   // Show loading state (three dots with bot icon, no copy button)
@@ -318,7 +335,10 @@ const AssistantMessage: FC<MessageProps> = ({ message }) => {
       data-role="assistant"
     >
       <div className="aui-assistant-message-content mx-2 leading-7 break-words text-foreground whitespace-pre-wrap">
-        {message.content}
+        {displayText}
+        {isTyping && (
+          <span className="aui-typewriter-cursor inline-block w-[2px] h-5 ml-0.5 bg-foreground animate-typewriter-blink" />
+        )}
       </div>
 
       {/* Display generated files (images, documents, etc.) */}
@@ -350,6 +370,17 @@ const AssistantMessage: FC<MessageProps> = ({ message }) => {
       {/* Show copy button when message has content */}
       {!message.isLoading && message.content && (
         <div className="aui-assistant-message-footer mt-2 ml-2 flex gap-2">
+          {/* Skip button (only show while typing) */}
+          {isTyping && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkip}
+              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Skip
+            </Button>
+          )}
           <TooltipIconButton tooltip="Copy" onClick={handleCopy}>
             {copied ? <CheckIcon /> : <CopyIcon />}
           </TooltipIconButton>
