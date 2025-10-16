@@ -96,6 +96,7 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
     <SidebarProvider>
       <div className="flex h-screen w-full">
         <ThreadListSidebar
+          collapsible="icon"
           user={userProfile}
           onLogout={() => signOut({ redirectUrl: "/" })}
           conversations={conversations}
@@ -108,8 +109,11 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
           isLoadingMore={conversationsLoading}
           onLoadMore={loadMoreConversations}
         />
-        <SidebarInset>
-          <SidebarTrigger className="absolute top-4 left-4 md:hidden" />
+        <SidebarInset className="relative">
+          {/* Mobile sidebar trigger - top left, visible on mobile only */}
+          <div className="md:hidden absolute top-3 left-3 z-20">
+            <SidebarTrigger className="size-10 bg-background border border-border/50 shadow-sm hover:bg-muted" />
+          </div>
           <Thread
             messages={messages}
             isStreaming={isStreaming}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, type FC } from "react"
+import React, { useState, useRef, useEffect, type FC } from "react"
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -114,7 +114,7 @@ export const Thread: FC<ThreadProps> = ({
           <div
             ref={viewportRef}
             onScroll={handleScroll}
-            className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll px-4"
+            className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll px-4 pt-16 md:pt-4"
           >
             {messages.length === 0 && <ThreadWelcome onSendMessage={onSendMessage} />}
 
@@ -142,9 +142,10 @@ export const Thread: FC<ThreadProps> = ({
           {showScrollButton && (
             <button
               onClick={scrollToBottom}
-              className="absolute -top-12 z-10 self-center rounded-full p-4 border bg-background hover:bg-accent disabled:invisible"
+              className="absolute bottom-24 z-10 self-center rounded-full p-3 border border-border/50 bg-background shadow-md hover:bg-muted transition-colors"
+              aria-label="Scroll to bottom"
             >
-              <ArrowDownIcon />
+              <ArrowDownIcon className="size-5" />
             </button>
           )}
         </div>
@@ -159,14 +160,14 @@ interface ThreadWelcomeProps {
 
 const ThreadWelcome: FC<ThreadWelcomeProps> = ({ onSendMessage }) => {
   return (
-    <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col">
+    <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col px-4">
       <div className="aui-thread-welcome-center flex w-full flex-grow flex-col items-center justify-center">
-        <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-8">
+        <div className="aui-thread-welcome-message flex w-full flex-col justify-center items-center text-center px-4 py-8">
           <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="aui-thread-welcome-message-motion-1 text-2xl font-semibold"
+            className="aui-thread-welcome-message-motion-1 text-3xl font-semibold mb-2"
           >
             Welcome to Castor GEO!
           </m.div>
@@ -175,7 +176,7 @@ const ThreadWelcome: FC<ThreadWelcomeProps> = ({ onSendMessage }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ delay: 0.1 }}
-            className="aui-thread-welcome-message-motion-2 text-2xl text-muted-foreground/65"
+            className="aui-thread-welcome-message-motion-2 text-lg text-muted-foreground"
           >
             Your AI-powered assistant for Generative Search Optimization
           </m.div>
@@ -192,31 +193,33 @@ interface ThreadSuggestionsProps {
 
 const ThreadSuggestions: FC<ThreadSuggestionsProps> = ({ onSendMessage }) => {
   return (
-    <div className="aui-thread-welcome-suggestions grid w-full gap-2 pb-4 @md:grid-cols-2">
-      {[
-        "What is Generative Search Optimization?",
-        "How to optimize content for AI search?",
-        "Best practices for structured data?",
-        "Tell me about AI search trends in 2025",
-      ].map((prompt, index) => (
-        <m.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ delay: 0.05 * index }}
-          key={`suggested-action-${index}`}
-          className="aui-thread-welcome-suggestion-display [&:nth-child(n+3)]:hidden @md:[&:nth-child(n+3)]:block"
-        >
-          <button
-            className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors"
-            onClick={() => onSendMessage(prompt)}
+    <div className="aui-thread-welcome-suggestions w-full px-4 pb-6">
+      <div className="grid gap-2 grid-cols-1 @sm:grid-cols-2 @md:grid-cols-2">
+        {[
+          "What is Generative Search Optimization?",
+          "How to optimize content for AI search?",
+          "Best practices for structured data?",
+          "Tell me about AI search trends in 2025",
+        ].map((prompt, index) => (
+          <m.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ delay: 0.05 * index }}
+            key={`suggested-action-${index}`}
+            className={`aui-thread-welcome-suggestion-display ${index >= 2 ? "hidden @sm:block" : ""}`}
           >
-            <span className="text-center text-sm font-semibold">
-              {prompt}
-            </span>
-          </button>
-        </m.div>
-      ))}
+            <button
+              className="w-full hover:bg-muted/80 flex items-center justify-center rounded-lg border border-border/50 p-4 transition-colors text-sm font-medium"
+              onClick={() => onSendMessage(prompt)}
+            >
+              <span className="text-center">
+                {prompt}
+              </span>
+            </button>
+          </m.div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -236,13 +239,17 @@ const Composer: FC<ComposerProps> = ({
   isStreaming,
   onCancel,
 }) => {
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
   return (
-    <div className="aui-composer-wrapper sticky bottom-0 mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 overflow-visible rounded-t-3xl bg-background pb-4 md:pb-6">
+    <div className="aui-composer-wrapper sticky bottom-0 mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 overflow-visible bg-background pb-4 md:pb-6">
       <form
         onSubmit={onSubmit}
-        className="aui-composer-root relative flex w-full flex-col rounded-3xl bg-muted px-1 shadow-lg"
+        className="aui-composer-root relative flex items-center w-full rounded-full bg-muted shadow-sm border border-border/50 px-4 py-2.5 transition-shadow focus-within:shadow-md focus-within:border-border"
       >
-        <textarea
+        <input
+          ref={inputRef}
+          type="text"
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyDown={(e) => {
@@ -252,31 +259,30 @@ const Composer: FC<ComposerProps> = ({
             }
           }}
           placeholder="Send a message..."
-          className="aui-composer-input mb-1 max-h-40 w-full resize-none bg-transparent px-3.5 py-2 text-base outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground"
-          rows={1}
+          className="aui-composer-input flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
           autoFocus
           aria-label="Message input"
         />
-        <div className="aui-composer-action-wrapper relative mx-1 mt-2 mb-2 flex items-center justify-end">
+        <div className="aui-composer-action-wrapper ml-2 flex items-center">
           {!isStreaming ? (
             <button
               type="submit"
               disabled={!inputValue.trim()}
-              className="aui-composer-send size-[34px] rounded-full flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="aui-composer-send size-8 rounded-full flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               aria-label="Send message"
             >
-              <ArrowUpIcon className="aui-composer-send-icon size-5" />
+              <ArrowUpIcon className="aui-composer-send-icon size-4" />
             </button>
           ) : (
             <Button
               type="button"
               onClick={onCancel}
-              variant="default"
+              variant="ghost"
               size="icon"
-              className="aui-composer-cancel size-[34px] rounded-full border border-muted-foreground/60 hover:bg-primary/75 dark:border-muted-foreground/90"
+              className="aui-composer-cancel size-8 rounded-full hover:bg-muted-foreground/10"
               aria-label="Stop generating"
             >
-              <Square className="aui-composer-cancel-icon size-3.5 fill-white dark:fill-black" />
+              <Square className="aui-composer-cancel-icon size-3.5 fill-current" />
             </Button>
           )}
         </div>
