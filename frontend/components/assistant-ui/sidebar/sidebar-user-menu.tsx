@@ -48,7 +48,7 @@ export function SidebarUserMenu({ user, onLogout }: SidebarUserMenuProps) {
 
   const avatarButton = (
     <button className="rounded-full hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-      <Avatar className="size-8 cursor-pointer">
+      <Avatar className="size-10 cursor-pointer shrink-0">
         <AvatarImage
           src={user?.avatar || "/placeholder.svg"}
           alt={user?.name || "User"}

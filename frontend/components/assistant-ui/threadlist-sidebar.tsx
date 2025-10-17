@@ -56,18 +56,21 @@ export function ThreadListSidebar({
 }: ThreadListSidebarProps) {
   return (
     <Sidebar collapsible={collapsible}>
-      {/* Header: Logo + Trigger in expanded, Hamburger only in collapsed */}
-      <SidebarHeader className="flex flex-row items-center justify-between border-b px-2 py-2 gap-2">
-        {/* Expanded state: Show logo on left */}
-        <div className="group-data-[collapsible=icon]:hidden">
+      {/* Header: Logo (always left) with hover hamburger overlay in collapsed, separate right hamburger in expanded */}
+      <SidebarHeader className="flex flex-row items-center justify-between border-b px-2 py-2">
+        {/* LEFT: Logo (always same position, never moves) */}
+        <div className="relative size-10">
+          {/* Logo - always visible */}
           <SidebarLogo />
+
+          {/* Hover overlay - hamburger appears on hover in collapsed state only */}
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background opacity-0 hover:opacity-100 transition-opacity group-data-[state=expanded]:hidden">
+            <SidebarTrigger className="size-10" />
+          </div>
         </div>
-        {/* Collapsed state: Show hamburger centered */}
-        <div className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center">
-          <SidebarTrigger />
-        </div>
-        {/* Expanded state: Show hamburger on right */}
-        <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
+
+        {/* RIGHT: Hamburger - only visible in expanded state */}
+        <SidebarTrigger className="group-data-[collapsible=icon]:hidden size-10" />
       </SidebarHeader>
 
       {/* Content: New Thread button + Conversation list */}
