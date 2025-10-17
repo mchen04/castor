@@ -3,7 +3,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { SidebarLogo } from "./sidebar/sidebar-logo"
@@ -85,9 +84,6 @@ export function ThreadListSidebar({
           onLoadMore={onLoadMore}
         />
       </SidebarContent>
-
-      {/* Rail for hover expand */}
-      <SidebarRail />
 
       {/* Footer: User menu */}
       <SidebarFooter className="border-t p-3">
