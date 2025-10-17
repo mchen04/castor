@@ -57,10 +57,18 @@ export function ThreadListSidebar({
 }: ThreadListSidebarProps) {
   return (
     <Sidebar collapsible={collapsible}>
-      {/* Header: Logo left, Trigger right */}
+      {/* Header: Logo + Trigger in expanded, Hamburger only in collapsed */}
       <SidebarHeader className="flex flex-row items-center justify-between border-b px-2 py-2 gap-2">
-        <SidebarLogo />
-        <SidebarTrigger className="size-8 group-data-[collapsible=icon]:hidden" />
+        {/* Expanded state: Show logo on left */}
+        <div className="group-data-[collapsible=icon]:hidden">
+          <SidebarLogo />
+        </div>
+        {/* Collapsed state: Show hamburger centered */}
+        <div className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center">
+          <SidebarTrigger />
+        </div>
+        {/* Expanded state: Show hamburger on right */}
+        <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
       </SidebarHeader>
 
       {/* Content: New Thread button + Conversation list */}

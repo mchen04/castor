@@ -10,7 +10,7 @@ interface SidebarNavButtonProps {
 /**
  * New Thread button that adapts to sidebar state
  * - Expanded: Shows icon + "New Thread" text
- * - Collapsed: Shows icon only with tooltip
+ * - Collapsed: Shows size-10 icon button centered with tooltip
  */
 export function SidebarNavButton({ onClick }: SidebarNavButtonProps) {
   const { state } = useSidebar()
@@ -19,9 +19,9 @@ export function SidebarNavButton({ onClick }: SidebarNavButtonProps) {
     <Button
       onClick={onClick}
       variant="ghost"
-      className="w-full justify-start gap-2 px-3 py-2 text-sm hover:bg-muted/80 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
+      className="w-full justify-start gap-2 px-3 py-2 text-sm hover:bg-muted/80 transition-colors group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:mx-auto"
     >
-      <PlusIcon className="size-4 shrink-0" />
+      <PlusIcon className="size-4 shrink-0 group-data-[collapsible=icon]:size-5" />
       <span className="group-data-[collapsible=icon]:hidden">New Thread</span>
     </Button>
   )
