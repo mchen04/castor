@@ -57,28 +57,27 @@ export function ThreadListSidebar({
   return (
     <Sidebar collapsible={collapsible}>
       {/* Header: Logo (always left) with hover hamburger overlay in collapsed, separate right hamburger in expanded */}
-      <SidebarHeader className="flex flex-row items-center justify-between border-b px-2 py-2">
+      <SidebarHeader className="flex flex-row items-center justify-between px-2 py-2">
         {/* LEFT: Logo (always same position, never moves) */}
-        <div className="relative size-10">
+        <div className="relative size-11">
           {/* Logo - always visible */}
           <SidebarLogo />
 
           {/* Hover overlay - hamburger appears on hover in collapsed state only */}
           <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background opacity-0 hover:opacity-100 transition-opacity group-data-[state=expanded]:hidden">
-            <SidebarTrigger className="size-10" />
+            <SidebarTrigger className="size-11" />
           </div>
         </div>
 
         {/* RIGHT: Hamburger - only visible in expanded state */}
-        <SidebarTrigger className="group-data-[collapsible=icon]:hidden size-10" />
+        <SidebarTrigger className="group-data-[collapsible=icon]:hidden size-11" />
       </SidebarHeader>
 
       {/* Content: New Thread button + Conversation list */}
-      <SidebarContent className="px-2 pt-2">
-        {/* NEW THREAD: Fixed icon + overlay pattern (matches logo/hamburger) */}
-        <div className="relative size-10 group-data-[collapsible=icon]:size-10">
-          <SidebarNavButton onClick={onNewConversation} />
-        </div>
+      <SidebarContent className="px-2 pt-2 flex flex-col gap-1">
+        {/* NEW THREAD: Simple button matching conversation items */}
+        <SidebarNavButton onClick={onNewConversation} />
+
         <SidebarConversationList
           conversations={conversations}
           currentId={currentConversationId}
@@ -92,7 +91,7 @@ export function ThreadListSidebar({
       </SidebarContent>
 
       {/* Footer: User menu */}
-      <SidebarFooter className="border-t p-3">
+      <SidebarFooter className="p-3">
         <SidebarUserMenu user={user} onLogout={onLogout} />
       </SidebarFooter>
     </Sidebar>

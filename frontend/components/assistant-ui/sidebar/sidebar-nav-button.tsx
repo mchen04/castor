@@ -1,5 +1,4 @@
 import { PlusIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSidebar } from "@/components/ui/sidebar"
 
@@ -8,34 +7,28 @@ interface SidebarNavButtonProps {
 }
 
 /**
- * New Thread button using overlay pattern (matches logo/hamburger)
- * - Base layer: Fixed 40px icon button (always visible)
- * - Overlay layer: Full button with text (expanded only)
- * - Icon position is ALWAYS fixed, no transitions
+ * New Thread button using fixed container pattern
+ * - Icon stays in fixed-width container (no movement)
+ * - Text hidden with group-data selector when collapsed
+ * - Matches conversation item styling for consistency
  */
 export function SidebarNavButton({ onClick }: SidebarNavButtonProps) {
   const { state } = useSidebar()
 
-  const content = (
-    <>
-      {/* Base layer: Icon button - ALWAYS visible, ALWAYS 40px, NEVER moves */}
-      <Button
-        onClick={onClick}
-        variant="ghost"
-        className="size-10 p-0 hover:bg-muted/80 transition-colors"
-      >
-        <PlusIcon className="size-5" />
-      </Button>
-
-      {/* Overlay layer: Full button with text - only in expanded mode */}
-      <Button
-        onClick={onClick}
-        variant="ghost"
-        className="absolute inset-0 left-0 w-full justify-start pl-10 hover:bg-muted/80 transition-colors group-data-[collapsible=icon]:hidden"
-      >
-        <span className="text-sm">New Thread</span>
-      </Button>
-    </>
+  const button = (
+    <button
+      onClick={onClick}
+      className="flex items-center w-full h-11 rounded-lg hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {/* Fixed 44px icon container - matches button height exactly, never moves */}
+      <div className="w-11 h-11 flex items-center justify-center flex-shrink-0">
+        <PlusIcon className="w-5 h-5" />
+      </div>
+      {/* Text hidden when collapsed */}
+      <span className="text-sm font-normal group-data-[collapsible=icon]:hidden">
+        New Thread
+      </span>
+    </button>
   )
 
   // Wrap in tooltip when collapsed
@@ -43,12 +36,12 @@ export function SidebarNavButton({ onClick }: SidebarNavButtonProps) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div>{content}</div>
+          {button}
         </TooltipTrigger>
         <TooltipContent side="right">New Thread</TooltipContent>
       </Tooltip>
     )
   }
 
-  return content
+  return button
 }

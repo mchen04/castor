@@ -44,13 +44,14 @@ export function SidebarConversationItem({
 
   return (
     <div
-      className={`group relative flex items-center rounded-lg transition-colors ${
+      className={`group relative flex items-center h-11 rounded-lg transition-colors ${
         isActive ? "bg-muted" : "hover:bg-muted/50"
       }`}
     >
       <button
         onClick={onSelect}
-        className="flex-grow px-3 py-2.5 text-start min-w-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onDoubleClick={() => setIsEditing(true)}
+        className="flex items-center flex-grow h-full px-3 text-start min-w-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {isEditing ? (
           <input
@@ -65,12 +66,12 @@ export function SidebarConversationItem({
                 setIsEditing(false)
               }
             }}
-            className="w-full text-sm bg-transparent border-none outline-none focus:outline-none"
+            className="w-full text-sm font-normal bg-transparent border-none outline-none focus:outline-none"
             autoFocus
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="text-sm truncate block font-normal">
+          <span className="text-sm font-normal truncate block">
             {conversation.name || "New Chat"}
           </span>
         )}
