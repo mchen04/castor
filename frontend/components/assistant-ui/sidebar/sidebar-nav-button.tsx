@@ -20,7 +20,7 @@ export function SidebarNavButton({ onClick }: SidebarNavButtonProps) {
     <Button
       onClick={onClick}
       variant="ghost"
-      className="w-full justify-start gap-2 px-2 py-2 text-sm hover:bg-muted/80 transition-colors group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
+      className="size-full justify-start gap-2 px-2 py-2 text-sm hover:bg-muted/80 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
     >
       <PlusIcon className="size-5 shrink-0" />
       <span className="group-data-[collapsible=icon]:hidden">New Thread</span>

@@ -64,38 +64,41 @@ export function SidebarUserMenu({ user, onLogout }: SidebarUserMenuProps) {
   )
 
   return (
-    <div className="flex items-center gap-3 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-      <DropdownMenu>
-        {state === "collapsed" ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>{avatarButton}</DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="right">{user?.name || "User"}</TooltipContent>
-          </Tooltip>
-        ) : (
-          <DropdownMenuTrigger asChild>{avatarButton}</DropdownMenuTrigger>
-        )}
+    <div className="flex items-center gap-3">
+      {/* Fixed-size avatar container to prevent shifting like logo */}
+      <div className="relative size-10 shrink-0">
+        <DropdownMenu>
+          {state === "collapsed" ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>{avatarButton}</DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right">{user?.name || "User"}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <DropdownMenuTrigger asChild>{avatarButton}</DropdownMenuTrigger>
+          )}
 
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem onClick={() => router.push("/")}>
-            <Home className="mr-2 size-4" />
-            Home
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleManageSubscription}>
-            <CreditCard className="mr-2 size-4" />
-            Manage Subscription
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={onLogout}
-          >
-            <LogOut className="mr-2 size-4" />
-            Log out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => router.push("/")}>
+              <Home className="mr-2 size-4" />
+              Home
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleManageSubscription}>
+              <CreditCard className="mr-2 size-4" />
+              Manage Subscription
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={onLogout}
+            >
+              <LogOut className="mr-2 size-4" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* User details - hidden when collapsed */}
       <div className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden">
