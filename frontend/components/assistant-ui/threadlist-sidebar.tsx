@@ -75,8 +75,8 @@ export function ThreadListSidebar({
 
       {/* Content: New Thread button + Conversation list */}
       <SidebarContent className="px-2 pt-2">
-        {/* Wrap in fixed container to prevent icon shifting like logo */}
-        <div className="relative w-full group-data-[collapsible=icon]:size-10">
+        {/* NEW THREAD: Fixed icon + overlay pattern (matches logo/hamburger) */}
+        <div className="relative size-10 group-data-[collapsible=icon]:size-10">
           <SidebarNavButton onClick={onNewConversation} />
         </div>
         <SidebarConversationList

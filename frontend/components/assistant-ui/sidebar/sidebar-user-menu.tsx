@@ -68,16 +68,13 @@ export function SidebarUserMenu({ user, onLogout }: SidebarUserMenuProps) {
       {/* Fixed-size avatar container to prevent shifting like logo */}
       <div className="relative size-10 shrink-0">
         <DropdownMenu>
-          {state === "collapsed" ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>{avatarButton}</DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="right">{user?.name || "User"}</TooltipContent>
-            </Tooltip>
-          ) : (
-            <DropdownMenuTrigger asChild>{avatarButton}</DropdownMenuTrigger>
-          )}
+          {/* Always render same component tree to prevent avatar remounting/flickering */}
+          <Tooltip open={state === "collapsed" ? undefined : false}>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>{avatarButton}</DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">{user?.name || "User"}</TooltipContent>
+          </Tooltip>
 
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={() => router.push("/")}>
