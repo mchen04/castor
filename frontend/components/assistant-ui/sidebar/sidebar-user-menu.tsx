@@ -47,8 +47,8 @@ export function SidebarUserMenu({ user, onLogout }: SidebarUserMenuProps) {
   }
 
   const avatarButton = (
-    <button className="rounded-full hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-      <Avatar className="size-11 cursor-pointer shrink-0">
+    <button className="flex items-center justify-center size-11 rounded-full hover:opacity-80 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+      <Avatar className="size-10 cursor-pointer shrink-0">
         <AvatarImage
           src={user?.avatar || "/placeholder.svg"}
           alt={user?.name || "User"}
@@ -64,9 +64,9 @@ export function SidebarUserMenu({ user, onLogout }: SidebarUserMenuProps) {
   )
 
   return (
-    <div className="flex items-center gap-3">
-      {/* Fixed-size avatar container to prevent shifting like logo */}
-      <div className="relative size-11 shrink-0">
+    <div className="flex items-center gap-2">
+      {/* Fixed-size avatar container with proper centering */}
+      <div className="size-11 flex items-center justify-center shrink-0">
         <DropdownMenu>
           {/* Always render same component tree to prevent avatar remounting/flickering */}
           <Tooltip open={state === "collapsed" ? undefined : false}>

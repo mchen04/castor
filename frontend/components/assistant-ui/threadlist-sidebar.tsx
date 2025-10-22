@@ -56,21 +56,24 @@ export function ThreadListSidebar({
 }: ThreadListSidebarProps) {
   return (
     <Sidebar collapsible={collapsible}>
-      {/* Header: Logo (always left) with hover hamburger overlay in collapsed, separate right hamburger in expanded */}
-      <SidebarHeader className="flex flex-row items-center justify-between px-2 py-2">
-        {/* LEFT: Logo (always same position, never moves) */}
-        <div className="relative size-11">
-          {/* Logo - always visible */}
-          <SidebarLogo />
+      {/* Header: Clean grid layout for perfect alignment */}
+      <SidebarHeader className="h-14 px-2">
+        <div className="flex items-center justify-between h-full">
+          {/* Logo - fixed position, always centered in its container */}
+          <div className="size-11 flex items-center justify-center shrink-0">
+            <SidebarLogo />
+          </div>
 
-          {/* Hover overlay - hamburger appears on hover in collapsed state only */}
-          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background opacity-0 hover:opacity-100 transition-opacity group-data-[state=expanded]:hidden">
+          {/* Hamburger - only visible in expanded state, aligned to the right */}
+          <div className="size-11 flex items-center justify-center shrink-0 group-data-[collapsible=icon]:hidden">
             <SidebarTrigger className="size-11" />
           </div>
-        </div>
 
-        {/* RIGHT: Hamburger - only visible in expanded state */}
-        <SidebarTrigger className="group-data-[collapsible=icon]:hidden size-11" />
+          {/* Hamburger for collapsed state - overlay on logo with hover */}
+          <div className="absolute left-2 top-2 size-11 flex items-center justify-center group-data-[state=expanded]:hidden">
+            <SidebarTrigger className="size-11 opacity-0 hover:opacity-100 transition-opacity bg-background/95 backdrop-blur-sm rounded-lg" />
+          </div>
+        </div>
       </SidebarHeader>
 
       {/* Content: New Thread button + Conversation list */}
@@ -90,8 +93,8 @@ export function ThreadListSidebar({
         />
       </SidebarContent>
 
-      {/* Footer: User menu */}
-      <SidebarFooter className="p-3">
+      {/* Footer: User menu with consistent padding */}
+      <SidebarFooter className="px-2 py-2">
         <SidebarUserMenu user={user} onLogout={onLogout} />
       </SidebarFooter>
     </Sidebar>
