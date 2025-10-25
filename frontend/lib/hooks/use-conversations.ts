@@ -15,6 +15,19 @@ interface UseConversationsResult {
   renameConversation: (conversationId: string, newName: string) => Promise<void>
 }
 
+/**
+ * Normalize conversation name by removing Dify's server-side truncation
+ * Dify inconsistently truncates names to 21 chars + "…"
+ * We strip the ellipsis so CSS can handle ALL truncation uniformly
+ */
+function normalizeConversationName(name: string): string {
+  // Dify's truncation pattern: exactly 21 chars ending with "…"
+  if (name.length === 21 && name.endsWith('…')) {
+    return name.slice(0, -1) // Remove trailing "…"
+  }
+  return name
+}
+
 export function useConversations(userId: string): UseConversationsResult {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -47,9 +60,10 @@ export function useConversations(userId: string): UseConversationsResult {
       const difyConversations = result.data || []
 
       // Transform Dify conversations to UI format
+      // Normalize names to remove Dify's inconsistent server-side truncation
       const transformedConversations: Conversation[] = difyConversations.map((conv) => ({
         id: conv.id,
-        name: conv.name || 'New Conversation',
+        name: normalizeConversationName(conv.name || 'New Conversation'),
         created_at: conv.created_at,
         updated_at: conv.updated_at,
       }))
@@ -94,9 +108,10 @@ export function useConversations(userId: string): UseConversationsResult {
       const difyConversations = result.data || []
 
       // Transform and append new conversations
+      // Normalize names to remove Dify's inconsistent server-side truncation
       const transformedConversations: Conversation[] = difyConversations.map((conv) => ({
         id: conv.id,
-        name: conv.name || 'New Conversation',
+        name: normalizeConversationName(conv.name || 'New Conversation'),
         created_at: conv.created_at,
         updated_at: conv.updated_at,
       }))

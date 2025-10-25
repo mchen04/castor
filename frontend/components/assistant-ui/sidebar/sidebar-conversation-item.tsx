@@ -51,7 +51,7 @@ export function SidebarConversationItem({
       <button
         onClick={onSelect}
         onDoubleClick={() => setIsEditing(true)}
-        className="flex items-center flex-grow h-full px-3 text-start min-w-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex items-center flex-grow h-full px-3 pr-10 text-start min-w-0 overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {isEditing ? (
           <input
@@ -71,7 +71,7 @@ export function SidebarConversationItem({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="text-sm font-normal truncate block">
+          <span className="text-sm font-normal truncate block max-w-[12rem]">
             {conversation.name || "New Chat"}
           </span>
         )}
