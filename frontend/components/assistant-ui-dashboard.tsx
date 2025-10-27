@@ -84,11 +84,10 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
     if (newConversationId && !currentConversationId) {
       setCurrentConversationId(newConversationId)
 
-      // Defer conversation list reload to prevent re-render during streaming
-      setTimeout(async () => {
-        await loadConversations()
-        sendingFirstMessageRef.current = false
-      }, 500)
+      // Reload conversations to show the LLM-generated title
+      // No timeout needed - sendMessage awaits title generation completion
+      await loadConversations()
+      sendingFirstMessageRef.current = false
     }
   }
 

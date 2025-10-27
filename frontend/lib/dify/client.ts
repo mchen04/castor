@@ -86,7 +86,7 @@ export class DifyClient {
             conversation_id: params.conversationId || '',
             response_mode: 'streaming',
             inputs: {},
-            auto_generate_name: true,  // Best practice: auto-generate descriptive titles
+            auto_generate_name: false,  // Disabled: We generate titles client-side for consistency
             trace_id: params.traceId,  // Best practice: distributed tracing
           }),
         })
