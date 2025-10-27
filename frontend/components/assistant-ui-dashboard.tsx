@@ -33,6 +33,7 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
     createConversation,
     deleteConversation,
     renameConversation,
+    updateConversationName,
   } = useConversations(userId)
 
   // Chat state for current conversation
@@ -78,15 +79,17 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
       sendingFirstMessageRef.current = true
     }
 
-    const newConversationId = await sendMessage(query)
+    const result = await sendMessage(query)
 
     // If this created a new conversation, update current conversation ID
-    if (newConversationId && !currentConversationId) {
-      setCurrentConversationId(newConversationId)
+    if (result && !currentConversationId) {
+      setCurrentConversationId(result.conversationId)
 
-      // Reload conversations to show the LLM-generated title
-      // No timeout needed - sendMessage awaits title generation completion
-      await loadConversations()
+      // Update conversation name in local state if title was generated
+      // No reload needed - pessimistic without reload pattern
+      if (result.title) {
+        updateConversationName(result.conversationId, result.title)
+      }
       sendingFirstMessageRef.current = false
     }
   }

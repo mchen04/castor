@@ -12,7 +12,7 @@ interface UseDifyChatResult {
   messages: Message[]
   isStreaming: boolean
   error: Error | null
-  sendMessage: (query: string) => Promise<string | null>
+  sendMessage: (query: string) => Promise<{ conversationId: string; title?: string } | null>
   cancelStream: () => void
   stopAndRemoveMessage: () => void
 }
@@ -136,9 +136,9 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
 
   /**
    * Send a message and stream the response
-   * Returns the new conversation ID if this was a new conversation
+   * Returns the new conversation ID and title if this was a new conversation
    */
-  const sendMessage = useCallback(async (query: string): Promise<string | null> => {
+  const sendMessage = useCallback(async (query: string): Promise<{ conversationId: string; title?: string } | null> => {
     if (!userId) {
       throw new Error('Not authenticated')
     }
@@ -203,6 +203,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       let buffer = ''
       let accumulatedText = ''
       let newConversationId: string | null = null
+      let generatedTitle: string | undefined = undefined
       let currentTaskId: string | null = null
       const messageFiles: MessageFile[] = []
 
@@ -371,8 +372,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
             const { title } = await titleResponse.json()
 
             // Rename conversation in Dify with generated title
-            // Await to ensure rename completes before conversations reload
-            await fetch('/api/dify/rename', {
+            const renameResponse = await fetch('/api/dify/rename', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -384,7 +384,12 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
               }),
             })
 
-            console.log(`[Title] Generated: "${title}" for conversation ${newConversationId}`)
+            // Capture the title from rename response to return to dashboard
+            if (renameResponse.ok) {
+              const renameData = await renameResponse.json()
+              generatedTitle = renameData.name
+              console.log(`[Title] Generated: "${generatedTitle}" for conversation ${newConversationId}`)
+            }
           }
         } catch (titleError) {
           // Silently fail - title generation is a UX enhancement, not critical
@@ -392,7 +397,8 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
         }
       }
 
-      return newConversationId
+      // Return both conversationId and title (if generated)
+      return newConversationId ? { conversationId: newConversationId, title: generatedTitle } : null
     } catch (err) {
       console.error('Failed to send message:', err)
 

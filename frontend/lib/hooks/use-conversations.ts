@@ -13,6 +13,7 @@ interface UseConversationsResult {
   createConversation: () => string
   deleteConversation: (conversationId: string) => Promise<void>
   renameConversation: (conversationId: string, newName: string) => Promise<void>
+  updateConversationName: (conversationId: string, newName: string) => void
 }
 
 export function useConversations(userId: string): UseConversationsResult {
@@ -154,13 +155,27 @@ export function useConversations(userId: string): UseConversationsResult {
         throw new Error(`Failed to delete conversation: ${response.statusText}`)
       }
 
-      // Reload conversations after deletion
-      await loadConversations()
+      // Filter local state instead of reloading (pessimistic without reload)
+      setConversations(prev => prev.filter(c => c.id !== conversationId))
     } catch (err) {
       console.error('Failed to delete conversation:', err)
       throw err
     }
-  }, [userId, loadConversations])
+  }, [userId])
+
+  /**
+   * Update conversation name in local state (no API call)
+   * Used after auto-rename completes to avoid reload
+   */
+  const updateConversationName = useCallback((conversationId: string, newName: string) => {
+    setConversations(prev =>
+      prev.map(c =>
+        c.id === conversationId
+          ? { ...c, name: newName, updated_at: Date.now() / 1000 }
+          : c
+      )
+    )
+  }, [])
 
   /**
    * Rename a conversation
@@ -188,13 +203,20 @@ export function useConversations(userId: string): UseConversationsResult {
         throw new Error(`Failed to rename conversation: ${response.statusText}`)
       }
 
-      // Reload conversations after rename
-      await loadConversations()
+      // Update local state instead of reloading (pessimistic without reload)
+      const data = await response.json()
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === conversationId
+            ? { ...c, name: data.name, updated_at: data.updated_at }
+            : c
+        )
+      )
     } catch (err) {
       console.error('Failed to rename conversation:', err)
       throw err
     }
-  }, [userId, loadConversations])
+  }, [userId])
 
   return {
     conversations,
@@ -206,5 +228,6 @@ export function useConversations(userId: string): UseConversationsResult {
     createConversation,
     deleteConversation,
     renameConversation,
+    updateConversationName,
   }
 }
