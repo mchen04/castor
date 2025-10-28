@@ -46,66 +46,62 @@ export function SidebarUserMenu({ user, onLogout }: SidebarUserMenuProps) {
     }
   }
 
-  const avatarButton = (
-    <button className="flex items-center justify-center size-11 rounded-full hover:opacity-80 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-      <Avatar className="size-10 cursor-pointer shrink-0">
-        <AvatarImage
-          src={user?.avatar || "/placeholder.svg"}
-          alt={user?.name || "User"}
-        />
-        <AvatarFallback className="bg-primary text-primary-foreground">
-          {user?.name
-            ?.split(" ")
-            .map((n) => n[0])
-            .join("") || "U"}
-        </AvatarFallback>
-      </Avatar>
-    </button>
-  )
-
   return (
-    <div className="flex items-center gap-2">
-      {/* Fixed-size avatar container with proper centering */}
-      <div className="size-11 flex items-center justify-center shrink-0">
-        <DropdownMenu>
-          {/* Always render same component tree to prevent avatar remounting/flickering */}
-          <Tooltip open={state === "collapsed" ? undefined : false}>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>{avatarButton}</DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="right">{user?.name || "User"}</TooltipContent>
-          </Tooltip>
+    <DropdownMenu>
+      {/* Always render same component tree to prevent avatar remounting/flickering */}
+      <Tooltip open={state === "collapsed" ? undefined : false}>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 w-full rounded-lg hover:bg-accent/50 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 p-1">
+              {/* Fixed-size avatar container with proper centering */}
+              <div className="size-11 flex items-center justify-center shrink-0 rounded-full">
+                <Avatar className="size-10 cursor-pointer shrink-0">
+                  <AvatarImage
+                    src={user?.avatar || "/placeholder.svg"}
+                    alt={user?.name || "User"}
+                  />
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {user?.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("") || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
 
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem onClick={() => router.push("/")}>
-              <Home className="mr-2 size-4" />
-              Home
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleManageSubscription}>
-              <CreditCard className="mr-2 size-4" />
-              Manage Subscription
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={onLogout}
-            >
-              <LogOut className="mr-2 size-4" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+              {/* User details - hidden when collapsed */}
+              <div className="flex min-w-0 flex-1 flex-col text-left group-data-[collapsible=icon]:hidden">
+                <span className="truncate text-sm font-medium">
+                  {user?.name || "User"}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {user?.email || ""}
+                </span>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="right">{user?.name || "User"}</TooltipContent>
+      </Tooltip>
 
-      {/* User details - hidden when collapsed */}
-      <div className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden">
-        <span className="truncate text-sm font-medium">
-          {user?.name || "User"}
-        </span>
-        <span className="truncate text-xs text-muted-foreground">
-          {user?.email || ""}
-        </span>
-      </div>
-    </div>
+      <DropdownMenuContent side="top" align="center" className="w-56">
+        <DropdownMenuItem onClick={() => router.push("/")}>
+          <Home className="mr-2 size-4" />
+          Home
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleManageSubscription}>
+          <CreditCard className="mr-2 size-4" />
+          Manage Subscription
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onClick={onLogout}
+        >
+          <LogOut className="mr-2 size-4" />
+          Log out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
