@@ -79,42 +79,42 @@ export function SidebarConversationItem({
       </button>
 
       {/* Three-dot menu - shows only when this specific item is hovered */}
-      {isHovered && !isEditing && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="absolute right-2 p-1.5 rounded-md hover:bg-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Options for "${conversation.name}"`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="size-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsEditing(true)
-              }}
-            >
-              <Pencil className="mr-2 size-4" />
-              Rename
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={(e) => {
-                e.stopPropagation()
-                if (confirm(`Delete "${conversation.name}"?`)) {
-                  onDelete()
-                }
-              }}
-            >
-              <Trash2 className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className={`absolute right-2 p-1.5 rounded-md hover:bg-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              isHovered && !isEditing ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+            }`}
+            aria-label={`Options for "${conversation.name}"`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreVertical className="size-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsEditing(true)
+            }}
+          >
+            <Pencil className="mr-2 size-4" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (confirm(`Delete "${conversation.name}"?`)) {
+                onDelete()
+              }
+            }}
+          >
+            <Trash2 className="mr-2 size-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }
