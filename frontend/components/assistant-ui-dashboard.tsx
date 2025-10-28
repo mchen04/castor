@@ -120,6 +120,7 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
             messages={messages}
             isStreaming={isStreaming}
             isPending={isPending}
+            conversationId={currentConversationId}
             onSendMessage={handleSendMessage}
             onStopAndRemove={stopAndRemoveMessage}
           />

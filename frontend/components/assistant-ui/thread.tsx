@@ -22,6 +22,7 @@ interface ThreadProps {
   messages: Message[]
   isStreaming: boolean
   isPending: boolean
+  conversationId: string
   onSendMessage: (query: string) => Promise<void>
   onStopAndRemove: () => void
 }
@@ -30,6 +31,7 @@ export const Thread: FC<ThreadProps> = ({
   messages,
   isStreaming,
   isPending,
+  conversationId,
   onSendMessage,
   onStopAndRemove,
 }) => {
@@ -118,11 +120,11 @@ export const Thread: FC<ThreadProps> = ({
             onScroll={handleScroll}
             className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll px-4 pt-16 md:pt-4"
           >
-            {/* Show skeleton when loading initial conversation history */}
-            {isPending && messages.length === 0 && <MessageSkeleton />}
+            {/* Show skeleton only when loading an actual conversation (not new threads) */}
+            {isPending && conversationId && messages.length === 0 && <MessageSkeleton />}
 
-            {/* Show welcome UI for new conversations (not loading) */}
-            {!isPending && messages.length === 0 && <ThreadWelcome onSendMessage={onSendMessage} />}
+            {/* Show welcome UI for new conversations */}
+            {messages.length === 0 && (!conversationId || !isPending) && <ThreadWelcome onSendMessage={onSendMessage} />}
 
             {/* Render messages */}
             {messages.map((message) => (
@@ -162,41 +164,11 @@ export const Thread: FC<ThreadProps> = ({
 }
 
 /**
- * MessageSkeleton - Loading placeholder for conversation history
- * Displays animated skeleton UI while messages are being fetched
+ * MessageSkeleton - Empty state while loading conversation history
+ * Just shows blank viewport (no fake messages)
  */
 const MessageSkeleton: FC = () => {
-  return (
-    <div className="mx-auto w-full max-w-[var(--thread-max-width)] space-y-8 py-8 animate-in fade-in duration-500">
-      {/* Skeleton Message 1 - User */}
-      <div className="flex justify-end px-2">
-        <div className="w-2/3 space-y-2">
-          <div className="h-4 bg-muted rounded-full animate-pulse" />
-          <div className="h-4 bg-muted rounded-full w-5/6 animate-pulse" />
-        </div>
-      </div>
-
-      {/* Skeleton Message 2 - Assistant */}
-      <div className="space-y-2 px-2">
-        <div className="h-4 bg-muted/70 rounded animate-pulse" />
-        <div className="h-4 bg-muted/70 rounded animate-pulse" />
-        <div className="h-4 bg-muted/70 rounded w-4/5 animate-pulse" />
-      </div>
-
-      {/* Skeleton Message 3 - User */}
-      <div className="flex justify-end px-2">
-        <div className="w-1/2 space-y-2">
-          <div className="h-4 bg-muted rounded-full animate-pulse" />
-        </div>
-      </div>
-
-      {/* Skeleton Message 4 - Assistant */}
-      <div className="space-y-2 px-2">
-        <div className="h-4 bg-muted/70 rounded animate-pulse" />
-        <div className="h-4 bg-muted/70 rounded w-5/6 animate-pulse" />
-      </div>
-    </div>
-  )
+  return <div className="flex-1" />
 }
 
 interface ThreadWelcomeProps {
