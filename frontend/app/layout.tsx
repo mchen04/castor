@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
+import { QueryProvider } from './providers'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -37,7 +38,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <QueryProvider>
+              {children}
+            </QueryProvider>
           </ThemeProvider>
           <Analytics />
         </body>

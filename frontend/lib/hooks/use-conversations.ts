@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useInfiniteQuery, useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import { useCallback } from 'react'
 import type { Conversation, DifyConversationsResponse } from '@/lib/types/chat'
 
 interface UseConversationsResult {
@@ -16,111 +17,225 @@ interface UseConversationsResult {
   updateConversationName: (conversationId: string, newName: string) => void
 }
 
+/**
+ * Hook for managing conversations with TanStack Query
+ *
+ * Features:
+ * - Automatic caching with 2-minute freshness
+ * - Infinite scroll pagination
+ * - Optimistic updates for delete/rename
+ * - Automatic rollback on error
+ * - Request deduplication
+ */
 export function useConversations(userId: string): UseConversationsResult {
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-  const [hasMore, setHasMore] = useState(false)
-  const [lastId, setLastId] = useState<string | undefined>(undefined)
+  const queryClient = useQueryClient()
 
-  const loadConversations = useCallback(async () => {
-    if (!userId) return
+  // Fetch conversations with infinite query for pagination
+  const {
+    data,
+    error,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['conversations', userId],
+    queryFn: async ({ pageParam }) => {
+      const url = pageParam
+        ? `/api/dify/conversations?limit=20&last_id=${pageParam}`
+        : '/api/dify/conversations?limit=20'
 
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch(
-        `/api/dify/conversations?limit=20`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'same-origin',
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const result: DifyConversationsResponse = await response.json()
-      const difyConversations = result.data || []
-
-      // Transform Dify conversations to UI format
-      const transformedConversations: Conversation[] = difyConversations.map((conv) => ({
-        id: conv.id,
-        name: conv.name || 'New Conversation',
-        created_at: conv.created_at,
-        updated_at: conv.updated_at,
-      }))
-
-      setConversations(transformedConversations)
-      setHasMore(result.has_more || false)
-
-      // Set lastId for pagination (last conversation ID)
-      if (transformedConversations.length > 0) {
-        setLastId(transformedConversations[transformedConversations.length - 1].id)
-      }
-    } catch (err) {
-      console.error('Failed to load conversations:', err)
-      setError(err instanceof Error ? err : new Error('Failed to load conversations'))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [userId])
-
-  const loadMoreConversations = useCallback(async () => {
-    if (!userId || !lastId || !hasMore) return
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch(
-        `/api/dify/conversations?limit=20&last_id=${lastId}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'same-origin',
-        }
-      )
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+      })
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
       const result: DifyConversationsResponse = await response.json()
-      const difyConversations = result.data || []
+      return result
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      // Return undefined if no more pages, otherwise return last conversation ID
+      if (!lastPage.has_more || !lastPage.data || lastPage.data.length === 0) {
+        return undefined
+      }
+      const lastConv = lastPage.data[lastPage.data.length - 1]
+      return lastConv?.id
+    },
+    enabled: !!userId, // Only fetch if userId exists
+    staleTime: 2 * 60 * 1000, // 2 minutes (conversations change less frequently)
+    gcTime: 5 * 60 * 1000, // 5 minutes (garbage collection)
+  })
 
-      // Transform and append new conversations
-      const transformedConversations: Conversation[] = difyConversations.map((conv) => ({
+  // Flatten paginated data into single array
+  const conversations: Conversation[] =
+    data?.pages.flatMap((page) =>
+      (page.data || []).map((conv) => ({
         id: conv.id,
         name: conv.name || 'New Conversation',
         created_at: conv.created_at,
         updated_at: conv.updated_at,
       }))
+    ) || []
 
-      setConversations(prev => [...prev, ...transformedConversations])
-      setHasMore(result.has_more || false)
+  // Delete mutation with optimistic update
+  const deleteMutation = useMutation({
+    mutationFn: async (conversationId: string) => {
+      const response = await fetch('/api/dify/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ conversationId }),
+      })
 
-      // Update lastId for next pagination
-      if (transformedConversations.length > 0) {
-        setLastId(transformedConversations[transformedConversations.length - 1].id)
+      if (!response.ok) {
+        throw new Error(`Failed to delete conversation: ${response.statusText}`)
       }
-    } catch (err) {
-      console.error('Failed to load more conversations:', err)
-      setError(err instanceof Error ? err : new Error('Failed to load more conversations'))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [userId, lastId, hasMore])
 
-  // Load conversations on mount
-  useEffect(() => {
-    loadConversations()
-  }, [loadConversations])
+      return response.json()
+    },
+    onMutate: async (conversationId) => {
+      // Cancel outgoing refetches to prevent overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['conversations', userId] })
+
+      // Snapshot current state for rollback
+      const previousData = queryClient.getQueryData(['conversations', userId])
+
+      // Optimistically remove conversation from cache
+      queryClient.setQueryData<InfiniteData<DifyConversationsResponse>>(
+        ['conversations', userId],
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: (page.data || []).filter((c) => c.id !== conversationId),
+            })),
+          }
+        }
+      )
+
+      return { previousData }
+    },
+    onError: (err, conversationId, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['conversations', userId], context.previousData)
+      }
+      console.error('Failed to delete conversation:', err)
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency (optional - can be removed if confident in optimistic update)
+      queryClient.invalidateQueries({ queryKey: ['conversations', userId] })
+    },
+  })
+
+  // Rename mutation with optimistic update
+  const renameMutation = useMutation({
+    mutationFn: async ({
+      conversationId,
+      newName,
+    }: {
+      conversationId: string
+      newName: string
+    }) => {
+      const response = await fetch('/api/dify/rename', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ conversationId, name: newName }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to rename conversation: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      return data
+    },
+    onMutate: async ({ conversationId, newName }) => {
+      await queryClient.cancelQueries({ queryKey: ['conversations', userId] })
+
+      const previousData = queryClient.getQueryData(['conversations', userId])
+
+      // Optimistically update conversation name
+      queryClient.setQueryData<InfiniteData<DifyConversationsResponse>>(
+        ['conversations', userId],
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: (page.data || []).map((c) =>
+                c.id === conversationId
+                  ? { ...c, name: newName, updated_at: Date.now() / 1000 }
+                  : c
+              ),
+            })),
+          }
+        }
+      )
+
+      return { previousData }
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['conversations', userId], context.previousData)
+      }
+      console.error('Failed to rename conversation:', err)
+    },
+    onSuccess: (data, { conversationId }) => {
+      // Update with actual server response (includes server-generated timestamp)
+      queryClient.setQueryData<InfiniteData<DifyConversationsResponse>>(
+        ['conversations', userId],
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: (page.data || []).map((c) =>
+                c.id === conversationId ? { ...c, ...data } : c
+              ),
+            })),
+          }
+        }
+      )
+    },
+  })
+
+  /**
+   * Manual local state update for conversation name
+   * Used after auto-generated title is created to avoid API refetch
+   */
+  const updateConversationName = useCallback(
+    (conversationId: string, newName: string) => {
+      queryClient.setQueryData<InfiniteData<DifyConversationsResponse>>(
+        ['conversations', userId],
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: (page.data || []).map((c) =>
+                c.id === conversationId
+                  ? { ...c, name: newName, updated_at: Date.now() / 1000 }
+                  : c
+              ),
+            })),
+          }
+        }
+      )
+    },
+    [queryClient, userId]
+  )
 
   /**
    * Create a new conversation
@@ -131,103 +246,35 @@ export function useConversations(userId: string): UseConversationsResult {
   }, [])
 
   /**
-   * Delete a conversation
+   * Wrapper for loadConversations (for backward compatibility)
+   * In TanStack Query, this is handled automatically on mount
    */
-  const deleteConversation = useCallback(async (conversationId: string) => {
-    if (!userId) return
-
-    try {
-      const response = await fetch(
-        `/api/dify/delete`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify({
-            conversationId,
-          }),
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete conversation: ${response.statusText}`)
-      }
-
-      // Filter local state instead of reloading (pessimistic without reload)
-      setConversations(prev => prev.filter(c => c.id !== conversationId))
-    } catch (err) {
-      console.error('Failed to delete conversation:', err)
-      throw err
-    }
-  }, [userId])
+  const loadConversations = useCallback(async () => {
+    // Invalidate to force refetch
+    await queryClient.invalidateQueries({ queryKey: ['conversations', userId] })
+  }, [queryClient, userId])
 
   /**
-   * Update conversation name in local state (no API call)
-   * Used after auto-rename completes to avoid reload
+   * Load more conversations (pagination)
    */
-  const updateConversationName = useCallback((conversationId: string, newName: string) => {
-    setConversations(prev =>
-      prev.map(c =>
-        c.id === conversationId
-          ? { ...c, name: newName, updated_at: Date.now() / 1000 }
-          : c
-      )
-    )
-  }, [])
-
-  /**
-   * Rename a conversation
-   */
-  const renameConversation = useCallback(async (conversationId: string, newName: string) => {
-    if (!userId) return
-
-    try {
-      const response = await fetch(
-        `/api/dify/rename`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify({
-            conversationId,
-            name: newName,
-          }),
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`Failed to rename conversation: ${response.statusText}`)
-      }
-
-      // Update local state instead of reloading (pessimistic without reload)
-      const data = await response.json()
-      setConversations(prev =>
-        prev.map(c =>
-          c.id === conversationId
-            ? { ...c, name: data.name, updated_at: data.updated_at }
-            : c
-        )
-      )
-    } catch (err) {
-      console.error('Failed to rename conversation:', err)
-      throw err
+  const loadMoreConversations = useCallback(async () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      await fetchNextPage()
     }
-  }, [userId])
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return {
     conversations,
-    isLoading,
-    error,
-    hasMore,
+    isLoading: isLoading || isFetchingNextPage,
+    error: error as Error | null,
+    hasMore: hasNextPage ?? false,
     loadConversations,
     loadMoreConversations,
     createConversation,
-    deleteConversation,
-    renameConversation,
+    deleteConversation: (conversationId: string) =>
+      deleteMutation.mutateAsync(conversationId),
+    renameConversation: (conversationId: string, newName: string) =>
+      renameMutation.mutateAsync({ conversationId, newName }),
     updateConversationName,
   }
 }
