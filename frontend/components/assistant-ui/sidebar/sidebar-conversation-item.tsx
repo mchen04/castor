@@ -1,6 +1,12 @@
 import * as React from "react"
-import { Trash2 } from "lucide-react"
+import { MoreVertical, Pencil, Trash2 } from "lucide-react"
 import type { Conversation } from "@/lib/types/chat"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface SidebarConversationItemProps {
   conversation: Conversation
@@ -14,8 +20,8 @@ interface SidebarConversationItemProps {
  * Individual conversation item in the sidebar
  * Features:
  * - Click to select conversation
- * - Inline editing on double-click
- * - Delete button on hover
+ * - Three-dot menu on hover (rename/delete options)
+ * - Inline editing triggered via menu
  * - Active state highlighting
  */
 export function SidebarConversationItem({
@@ -27,6 +33,7 @@ export function SidebarConversationItem({
 }: SidebarConversationItemProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   const [editValue, setEditValue] = React.useState(conversation.name)
+  const [isHovered, setIsHovered] = React.useState(false)
 
   const handleRename = () => {
     if (editValue.trim() && editValue !== conversation.name) {
@@ -35,22 +42,16 @@ export function SidebarConversationItem({
     setIsEditing(false)
   }
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (confirm(`Delete "${conversation.name}"?`)) {
-      onDelete()
-    }
-  }
-
   return (
     <div
-      className={`group relative flex items-center h-11 rounded-lg transition-colors ${
+      className={`relative flex items-center h-11 rounded-lg transition-colors ${
         isActive ? "bg-muted" : "hover:bg-muted/50"
       }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <button
         onClick={onSelect}
-        onDoubleClick={() => setIsEditing(true)}
         className="flex items-center flex-grow h-full px-3 pr-10 text-start min-w-0 overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {isEditing ? (
@@ -77,14 +78,43 @@ export function SidebarConversationItem({
         )}
       </button>
 
-      {/* Delete button - shows on hover or when active (CSS-only hover) */}
-      <button
-        onClick={handleDelete}
-        className="absolute right-2 p-1.5 rounded-md hover:bg-background hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label={`Delete "${conversation.name}"`}
-      >
-        <Trash2 className="size-4" />
-      </button>
+      {/* Three-dot menu - shows only when this specific item is hovered */}
+      {isHovered && !isEditing && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="absolute right-2 p-1.5 rounded-md hover:bg-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Options for "${conversation.name}"`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsEditing(true)
+              }}
+            >
+              <Pencil className="mr-2 size-4" />
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={(e) => {
+                e.stopPropagation()
+                if (confirm(`Delete "${conversation.name}"?`)) {
+                  onDelete()
+                }
+              }}
+            >
+              <Trash2 className="mr-2 size-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   )
 }
