@@ -34,6 +34,7 @@ export function SidebarConversationItem({
   const [isEditing, setIsEditing] = React.useState(false)
   const [editValue, setEditValue] = React.useState(conversation.name)
   const [isHovered, setIsHovered] = React.useState(false)
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false)
 
   const handleRename = () => {
     if (editValue.trim() && editValue !== conversation.name) {
@@ -45,7 +46,7 @@ export function SidebarConversationItem({
   return (
     <div
       className={`relative flex items-center h-11 rounded-lg transition-colors ${
-        isActive ? "bg-muted" : "hover:bg-muted/50"
+        isActive ? "bg-secondary" : "hover:bg-secondary/50"
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -79,11 +80,11 @@ export function SidebarConversationItem({
       </button>
 
       {/* Three-dot menu - shows only when this specific item is hovered */}
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={setIsMenuOpen}>
         <DropdownMenuTrigger asChild>
           <button
             className={`absolute right-2 p-1.5 rounded-md hover:bg-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              isHovered && !isEditing ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+              (isHovered || isMenuOpen) && !isEditing ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
             }`}
             aria-label={`Options for "${conversation.name}"`}
             onClick={(e) => e.stopPropagation()}
@@ -91,7 +92,7 @@ export function SidebarConversationItem({
             <MoreVertical className="size-4" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuContent align="center" className="w-40">
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation()
