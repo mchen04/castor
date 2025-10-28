@@ -37,7 +37,7 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
   } = useConversations(userId)
 
   // Chat state for current conversation
-  const { messages, isStreaming, sendMessage, stopAndRemoveMessage } = useDifyChat({
+  const { messages, isStreaming, isPending, sendMessage, stopAndRemoveMessage } = useDifyChat({
     userId,
     conversationId: currentConversationId,
   })
@@ -119,6 +119,7 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
           <Thread
             messages={messages}
             isStreaming={isStreaming}
+            isPending={isPending}
             onSendMessage={handleSendMessage}
             onStopAndRemove={stopAndRemoveMessage}
           />

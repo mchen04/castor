@@ -12,6 +12,7 @@ interface UseDifyChatProps {
 interface UseDifyChatResult {
   messages: Message[]
   isStreaming: boolean
+  isPending: boolean
   error: Error | null
   sendMessage: (query: string) => Promise<{ conversationId: string; title?: string } | null>
   cancelStream: () => void
@@ -39,8 +40,15 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
   /**
    * Fetch historical messages with React Query (cached)
    * Only fetches when conversationId exists
+   *
+   * Cache automatically provides instant loads for previously-viewed conversations
+   * For first-time loads, skeleton UI displays (clearer than showing wrong conversation)
    */
-  const { data: historicalMessages = [], error: historyError } = useQuery({
+  const {
+    data: historicalMessages = [],
+    error: historyError,
+    isPending,
+  } = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: async () => {
       if (!conversationId) return []
@@ -431,6 +439,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
   return {
     messages,
     isStreaming,
+    isPending,
     error: historyError || streamError,
     sendMessage,
     cancelStream,
