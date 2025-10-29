@@ -18,7 +18,7 @@ export function SidebarNavButton({ onClick }: SidebarNavButtonProps) {
 
   const button = (
     <div
-      className="flex items-center h-11 w-full rounded-lg hover:bg-muted/50 transition-colors"
+      className="flex items-center h-11 w-full rounded-lg hover:bg-secondary/50 transition-colors"
       style={{
         transform: 'translate3d(0, 0, 0)',
         backfaceVisibility: 'hidden',
