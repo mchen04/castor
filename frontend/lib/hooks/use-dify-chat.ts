@@ -14,7 +14,7 @@ interface UseDifyChatResult {
   isStreaming: boolean
   isPending: boolean
   error: Error | null
-  sendMessage: (query: string) => Promise<{ conversationId: string; title?: string } | null>
+  sendMessage: (query: string) => Promise<{ conversationId: string; title?: string; needsRename?: boolean } | null>
   cancelStream: () => void
   stopAndRemoveMessage: () => void
 }
@@ -110,17 +110,23 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     enabled: !!conversationId && !!userId, // Only fetch if conversation exists
     staleTime: 30 * 1000, // 30 seconds (messages rarely change after loading)
     gcTime: 5 * 60 * 1000, // 5 minutes (garbage collection)
+    placeholderData: (previousData) => previousData, // Keep previous messages visible during refetch
   })
 
   // Combine historical + streaming messages
   const messages = [...historicalMessages, ...streamingMessages]
+  console.log('[Messages] Array created', {
+    historicalCount: historicalMessages.length,
+    streamingCount: streamingMessages.length,
+    totalCount: messages.length
+  })
 
   /**
    * Send a message and stream the response
-   * Returns the new conversation ID and title if this was a new conversation
+   * Returns the new conversation ID, title, and whether rename is needed if this was a new conversation
    */
   const sendMessage = useCallback(
-    async (query: string): Promise<{ conversationId: string; title?: string } | null> => {
+    async (query: string): Promise<{ conversationId: string; title?: string; needsRename?: boolean } | null> => {
       if (!userId) {
         throw new Error('Not authenticated')
       }
@@ -131,6 +137,9 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       // Create abort controller for cancellation
       abortControllerRef.current = new AbortController()
 
+      // Track messages locally to avoid stale closure issues
+      const currentMessages: Message[] = []
+
       // Add user message immediately (optimistic)
       const userMessageId = `temp-${Date.now()}-user`
       const userMessage: Message = {
@@ -140,6 +149,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
         createdAt: new Date(),
         isHistorical: false,
       }
+      currentMessages.push(userMessage)
       setStreamingMessages((prev) => [...prev, userMessage])
 
       // Assistant message that will be updated as it streams
@@ -152,6 +162,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
         isLoading: true,
         isHistorical: false,
       }
+      currentMessages.push(assistantMessage)
       setStreamingMessages((prev) => [...prev, assistantMessage])
 
       try {
@@ -227,6 +238,15 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
                       accumulatedText += data.answer
                       currentTaskId = data.task_id
 
+                      // Update local array
+                      currentMessages[1] = {
+                        ...currentMessages[1],
+                        content: accumulatedText,
+                        isLoading: false,
+                        task_id: currentTaskId || undefined,
+                        files: messageFiles.length > 0 ? messageFiles : undefined,
+                      }
+
                       setStreamingMessages((prev) =>
                         prev.map((msg) =>
                           msg.id === assistantMessageId
@@ -256,6 +276,9 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
                         belongs_to: data.belongs_to as MessageFile['belongs_to'],
                       })
 
+                      // Update local array
+                      currentMessages[1] = { ...currentMessages[1], files: [...messageFiles] }
+
                       // Update message with new file
                       setStreamingMessages((prev) =>
                         prev.map((msg) =>
@@ -267,6 +290,10 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
                     case 'message_replace':
                       // Content moderation replaced the message
                       accumulatedText = data.answer
+
+                      // Update local array
+                      currentMessages[1] = { ...currentMessages[1], content: accumulatedText }
+
                       setStreamingMessages((prev) =>
                         prev.map((msg) =>
                           msg.id === assistantMessageId ? { ...msg, content: accumulatedText } : msg
@@ -334,46 +361,35 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
 
             if (titleResponse.ok) {
               const { title } = await titleResponse.json()
-
-              // Rename conversation in Dify
-              const renameResponse = await fetch('/api/dify/rename', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                  conversationId: newConversationId,
-                  name: title,
-                }),
-              })
-
-              if (renameResponse.ok) {
-                const renameData = await renameResponse.json()
-                generatedTitle = renameData.name
-                console.log(`[Title] Generated: "${generatedTitle}" for conversation ${newConversationId}`)
-              }
+              generatedTitle = title
+              console.log(`[Title] Generated: "${generatedTitle}" for conversation ${newConversationId}`)
             }
           } catch (titleError) {
             console.warn('Failed to generate conversation title:', titleError)
           }
         }
 
-        // After streaming completes, invalidate cache to refetch with new message
-        // This syncs the cache with the server state
-        if (conversationId) {
-          await queryClient.invalidateQueries({ queryKey: ['messages', conversationId] })
+        // Pre-populate the messages cache for the new conversation to prevent white flash
+        // This ensures that when conversationId changes and the query enables, there's already data
+        if (newConversationId && currentMessages.length > 0) {
+          console.log('[Cache] Pre-populating messages for new conversation', {
+            conversationId: newConversationId,
+            messageCount: currentMessages.length
+          })
+          queryClient.setQueryData(['messages', newConversationId], currentMessages)
         }
 
-        // If this was a new conversation, invalidate messages for the new ID
-        if (newConversationId && !conversationId) {
-          await queryClient.invalidateQueries({ queryKey: ['messages', newConversationId] })
-        }
-
-        // Clear streaming messages (now in historical cache)
+        // Clear streaming messages (they're now safely cached)
         setStreamingMessages([])
+        console.log('[StreamingMessages] Cleared')
 
-        return newConversationId ? { conversationId: newConversationId, title: generatedTitle } : null
+        return newConversationId
+          ? {
+              conversationId: newConversationId,
+              title: generatedTitle,
+              needsRename: !!generatedTitle // Flag to indicate rename is needed
+            }
+          : null
       } catch (err) {
         console.error('Failed to send message:', err)
 

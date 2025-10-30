@@ -14,6 +14,8 @@ interface AssistantUIDashboardProps {
 }
 
 export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
+  console.log('[Dashboard] Render')
+
   const { user } = useUser()
   const { signOut } = useClerk()
 
@@ -34,6 +36,7 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
     deleteConversation,
     renameConversation,
     updateConversationName,
+    addConversation,
   } = useConversations(userId)
 
   // Chat state for current conversation
@@ -85,11 +88,16 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
     if (result && !currentConversationId) {
       setCurrentConversationId(result.conversationId)
 
-      // Update conversation name in local state if title was generated
-      // No reload needed - pessimistic without reload pattern
-      if (result.title) {
-        updateConversationName(result.conversationId, result.title)
+      // Add the new conversation to the cache with its title
+      // This prevents the page refresh by ensuring the conversation exists immediately
+      addConversation(result.conversationId, result.title || 'New Conversation')
+
+      // If a title was generated, rename the conversation in Dify using the mutation
+      // This ensures proper cache updates and prevents UI flash
+      if (result.needsRename && result.title) {
+        await renameConversation(result.conversationId, result.title)
       }
+
       sendingFirstMessageRef.current = false
     }
   }

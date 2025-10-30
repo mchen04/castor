@@ -312,7 +312,9 @@ interface MessageProps {
   message: Message
 }
 
-const AssistantMessage: FC<MessageProps> = ({ message }) => {
+const AssistantMessage: FC<MessageProps> = React.memo(({ message }) => {
+  console.log('[AssistantMessage] Render', { id: message.id, isHistorical: message.isHistorical })
+
   const [copied, setCopied] = useState(false)
   const [skipRequested, setSkipRequested] = useState(false)
 
@@ -354,7 +356,7 @@ const AssistantMessage: FC<MessageProps> = ({ message }) => {
 
   return (
     <div
-      className="aui-assistant-message-root relative mx-auto w-full max-w-[var(--thread-max-width)] animate-in py-4 duration-150 ease-out fade-in slide-in-from-bottom-1 last:mb-24"
+      className={`aui-assistant-message-root relative mx-auto w-full max-w-[var(--thread-max-width)] py-4 last:mb-24${!message.isHistorical ? ' animate-in duration-150 ease-out fade-in slide-in-from-bottom-1' : ''}`}
       data-role="assistant"
     >
       <div className="aui-assistant-message-content mx-2 leading-7 break-words text-foreground whitespace-pre-wrap">
@@ -411,12 +413,14 @@ const AssistantMessage: FC<MessageProps> = ({ message }) => {
       )}
     </div>
   )
-}
+})
 
-const UserMessage: FC<MessageProps> = ({ message }) => {
+const UserMessage: FC<MessageProps> = React.memo(({ message }) => {
+  console.log('[UserMessage] Render', { id: message.id, isHistorical: message.isHistorical })
+
   return (
     <div
-      className="aui-user-message-root mx-auto grid w-full max-w-[var(--thread-max-width)] animate-in auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-2 px-2 py-4 duration-150 ease-out fade-in slide-in-from-bottom-1 first:mt-3 last:mb-5 [&:where(>*)]:col-start-2"
+      className={`aui-user-message-root mx-auto grid w-full max-w-[var(--thread-max-width)] auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-2 px-2 py-4 first:mt-3 last:mb-5 [&:where(>*)]:col-start-2${!message.isHistorical ? ' animate-in duration-150 ease-out fade-in slide-in-from-bottom-1' : ''}`}
       data-role="user"
     >
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
@@ -426,4 +430,4 @@ const UserMessage: FC<MessageProps> = ({ message }) => {
       </div>
     </div>
   )
-}
+})

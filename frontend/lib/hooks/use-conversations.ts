@@ -15,6 +15,7 @@ interface UseConversationsResult {
   deleteConversation: (conversationId: string) => Promise<void>
   renameConversation: (conversationId: string, newName: string) => Promise<void>
   updateConversationName: (conversationId: string, newName: string) => void
+  addConversation: (conversationId: string, name: string) => void
 }
 
 /**
@@ -129,10 +130,6 @@ export function useConversations(userId: string): UseConversationsResult {
       }
       console.error('Failed to delete conversation:', err)
     },
-    onSettled: () => {
-      // Refetch to ensure consistency (optional - can be removed if confident in optimistic update)
-      queryClient.invalidateQueries({ queryKey: ['conversations', userId] })
-    },
   })
 
   // Rename mutation with optimistic update
@@ -159,6 +156,7 @@ export function useConversations(userId: string): UseConversationsResult {
       return data
     },
     onMutate: async ({ conversationId, newName }) => {
+      console.log('[Rename] onMutate - Starting optimistic update', { conversationId, newName })
       await queryClient.cancelQueries({ queryKey: ['conversations', userId] })
 
       const previousData = queryClient.getQueryData(['conversations', userId])
@@ -182,31 +180,15 @@ export function useConversations(userId: string): UseConversationsResult {
         }
       )
 
+      console.log('[Rename] onMutate - Optimistic update complete')
       return { previousData }
     },
     onError: (err, variables, context) => {
+      console.log('[Rename] onError - Rolling back', { err: err.message })
       if (context?.previousData) {
         queryClient.setQueryData(['conversations', userId], context.previousData)
       }
       console.error('Failed to rename conversation:', err)
-    },
-    onSuccess: (data, { conversationId }) => {
-      // Update with actual server response (includes server-generated timestamp)
-      queryClient.setQueryData<InfiniteData<DifyConversationsResponse>>(
-        ['conversations', userId],
-        (old) => {
-          if (!old) return old
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              data: (page.data || []).map((c) =>
-                c.id === conversationId ? { ...c, ...data } : c
-              ),
-            })),
-          }
-        }
-      )
     },
   })
 
@@ -230,6 +212,63 @@ export function useConversations(userId: string): UseConversationsResult {
                   : c
               ),
             })),
+          }
+        }
+      )
+    },
+    [queryClient, userId]
+  )
+
+  /**
+   * Add a new conversation to the cache
+   * Used when a new conversation is created to immediately show it in the list
+   */
+  const addConversation = useCallback(
+    (conversationId: string, name: string) => {
+      queryClient.setQueryData<InfiniteData<DifyConversationsResponse>>(
+        ['conversations', userId],
+        (old) => {
+          if (!old) {
+            // If no data exists, create initial structure
+            return {
+              pages: [
+                {
+                  data: [
+                    {
+                      id: conversationId,
+                      name: name || 'New Conversation',
+                      created_at: Date.now() / 1000,
+                      updated_at: Date.now() / 1000,
+                    },
+                  ],
+                  has_more: false,
+                  limit: 20,
+                },
+              ],
+              pageParams: [undefined],
+            }
+          }
+
+          // Add to the beginning of the first page (newest conversations first)
+          const newConversation = {
+            id: conversationId,
+            name: name || 'New Conversation',
+            created_at: Date.now() / 1000,
+            updated_at: Date.now() / 1000,
+          }
+
+          return {
+            ...old,
+            pages: old.pages.map((page, index) => {
+              if (index === 0) {
+                // Only add to first page, at the beginning
+                return {
+                  ...page,
+                  data: [newConversation, ...(page.data || [])],
+                }
+              }
+              return page
+            }),
           }
         }
       )
@@ -276,5 +315,6 @@ export function useConversations(userId: string): UseConversationsResult {
     renameConversation: (conversationId: string, newName: string) =>
       renameMutation.mutateAsync({ conversationId, newName }),
     updateConversationName,
+    addConversation,
   }
 }
