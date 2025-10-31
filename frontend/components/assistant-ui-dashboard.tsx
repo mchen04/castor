@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useUser, useClerk } from "@clerk/nextjs"
+import { useQueryClient } from '@tanstack/react-query'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { ThreadListSidebar } from "@/components/assistant-ui/threadlist-sidebar"
 import { useDifyChat } from "@/lib/hooks/use-dify-chat"
@@ -16,6 +17,7 @@ interface AssistantUIDashboardProps {
 export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
   const { user } = useUser()
   const { signOut } = useClerk()
+  const queryClient = useQueryClient()
 
   // Current conversation state
   const [currentConversationId, setCurrentConversationId] = useState("")
@@ -56,6 +58,10 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
   // Handle new conversation
   const handleNewConversation = () => {
     const newConvId = createConversation()
+
+    // Clear any cached messages for empty conversation ID to ensure welcome screen shows
+    queryClient.removeQueries({ queryKey: ['messages', ''] })
+
     setCurrentConversationId(newConvId)
   }
 

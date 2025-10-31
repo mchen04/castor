@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Message, MessageFile, DifyMessage, DifyMessagesResponse } from '@/lib/types/chat'
 
@@ -36,6 +36,16 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
 
   // For canceling streaming
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  /**
+   * Clear streaming messages when switching to a new thread (empty conversationId)
+   * This ensures the welcome screen shows immediately without stale messages
+   */
+  useEffect(() => {
+    if (!conversationId) {
+      setStreamingMessages([])
+    }
+  }, [conversationId])
 
   /**
    * Fetch historical messages with React Query (cached)
@@ -109,7 +119,7 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     enabled: !!conversationId && !!userId, // Only fetch if conversation exists
     staleTime: 30 * 1000, // 30 seconds (messages rarely change after loading)
     gcTime: 5 * 60 * 1000, // 5 minutes (garbage collection)
-    placeholderData: (previousData) => previousData, // Keep previous messages visible during refetch
+    placeholderData: conversationId ? (previousData) => previousData : undefined, // Keep previous messages during refetch, but not for new threads
   })
 
   // Combine historical + streaming messages (memoized to prevent Fast Refresh issues)
