@@ -38,6 +38,7 @@ export const Thread: FC<ThreadProps> = ({
   const [inputValue, setInputValue] = useState("")
   const viewportRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [spacerHeight, setSpacerHeight] = useState("32px") // Dynamic spacer height
   const { scrollToBottom: scrollToBottomSmooth } = useScrollToMessage()
 
   // Track previous message length to detect new messages
@@ -47,26 +48,120 @@ export const Thread: FC<ThreadProps> = ({
 
   // Scroll to user's message after sending (waits for DOM update)
   useEffect(() => {
+    console.log('🔍 [SCROLL DEBUG] Effect triggered', {
+      currentLength: messages.length,
+      previousLength: prevMessageLengthRef.current,
+      messages: messages.map(m => ({ id: m.id, role: m.role, isLoading: m.isLoading, isHistorical: m.isHistorical }))
+    })
+
     // Only scroll on new message, not on updates to existing messages
     const newMessageAdded = messages.length > prevMessageLengthRef.current
 
+    console.log('🔍 [SCROLL DEBUG] newMessageAdded:', newMessageAdded)
+
     if (newMessageAdded && messages.length >= 2) {
-      // Use requestAnimationFrame for proper timing after DOM update
+      console.log('🔍 [SCROLL DEBUG] Scroll condition met, scheduling scroll...')
+
+      // Use triple requestAnimationFrame for proper timing after DOM update
+      // This ensures all layout shifts from React rendering are complete
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          // Find the second-to-last message (user's message)
-          // Last message is loading assistant response
-          const allMessages = viewportRef.current?.querySelectorAll('[data-role]')
-          const userMessage = allMessages?.[allMessages.length - 2]
+          requestAnimationFrame(() => {
+            console.log('🔍 [SCROLL DEBUG] Inside RAF, querying DOM...')
 
-          if (userMessage) {
-            userMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }
+            // Check viewport ref
+            if (!viewportRef.current) {
+              console.error('❌ [SCROLL DEBUG] viewportRef.current is null!')
+              return
+            }
+
+            // Comprehensive viewport diagnostics
+            const viewport = viewportRef.current
+            console.log('🔍 [SCROLL DEBUG] Viewport diagnostics:', {
+              scrollTop: viewport.scrollTop,
+              scrollHeight: viewport.scrollHeight,
+              clientHeight: viewport.clientHeight,
+              offsetHeight: viewport.offsetHeight,
+              canScroll: viewport.scrollHeight > viewport.clientHeight,
+              scrollableHeight: viewport.scrollHeight - viewport.clientHeight,
+              overflow: getComputedStyle(viewport).overflow,
+              overflowY: getComputedStyle(viewport).overflowY,
+            })
+
+            // Find the second-to-last message (user's message)
+            // Last message is loading assistant response
+            const allMessages = viewportRef.current?.querySelectorAll('[data-role]')
+
+            console.log('🔍 [SCROLL DEBUG] Found messages with [data-role]:', allMessages?.length)
+            console.log('🔍 [SCROLL DEBUG] Messages:', Array.from(allMessages || []).map(el => ({
+              role: el.getAttribute('data-role'),
+              text: el.textContent?.substring(0, 50)
+            })))
+
+            const userMessage = allMessages?.[allMessages.length - 2]
+
+            if (userMessage) {
+              const messageOffsetTop = (userMessage as HTMLElement).offsetTop
+              console.log('🔍 [SCROLL DEBUG] User message found:', {
+                role: userMessage.getAttribute('data-role'),
+                text: userMessage.textContent?.substring(0, 50),
+                offsetTop: messageOffsetTop
+              })
+
+              const scrollTopBefore = viewport.scrollTop
+              // Scroll to position the user message at the top with 16px padding
+              const targetScrollTop = Math.max(0, messageOffsetTop - 16)
+
+              // DYNAMIC SPACER: Set to viewport height to allow scrolling message to top
+              // This is the minimum needed - grows automatically as content expands
+              const neededSpacerHeight = viewport.clientHeight
+              setSpacerHeight(`${neededSpacerHeight}px`)
+
+              console.log('🔍 [SCROLL DEBUG] Attempting scroll:', {
+                targetScrollTop,
+                scrollTopBefore,
+                method: 'direct assignment (instant)',
+                calculatedSpacerHeight: neededSpacerHeight,
+                viewportClientHeight: viewport.clientHeight
+              })
+
+              // Try direct assignment (instant scroll, no animation)
+              viewport.scrollTop = targetScrollTop
+
+              // Check immediately
+              console.log('🔍 [SCROLL DEBUG] Immediate check after assignment:', {
+                scrollTop: viewport.scrollTop,
+                changed: viewport.scrollTop !== scrollTopBefore
+              })
+
+              // Check again after delay for smooth scroll
+              setTimeout(() => {
+                console.log('🔍 [SCROLL DEBUG] Final check after 100ms:', {
+                  scrollTopBefore,
+                  targetScrollTop,
+                  scrollTopAfter: viewport.scrollTop,
+                  changed: scrollTopBefore !== viewport.scrollTop,
+                  reachedTarget: Math.abs(viewport.scrollTop - targetScrollTop) < 5
+                })
+              }, 100)
+            } else {
+              console.error('❌ [SCROLL DEBUG] User message not found! allMessages.length:', allMessages?.length)
+            }
+          })
         })
       })
-
-      prevMessageLengthRef.current = messages.length
+    } else {
+      console.log('🔍 [SCROLL DEBUG] Scroll condition NOT met:', {
+        newMessageAdded,
+        messagesLength: messages.length,
+        meetsLengthRequirement: messages.length >= 2
+      })
     }
+
+    // IMPORTANT: Update ref on every effect run to stay in sync
+    // This prevents the ref from getting stale when messages update without length changes
+    prevMessageLengthRef.current = messages.length
+    console.log('🔍 [SCROLL DEBUG] Updated prevMessageLengthRef to:', messages.length)
   }, [messages])
 
   // Scroll to bottom when loading conversation history
@@ -82,6 +177,37 @@ export const Thread: FC<ThreadProps> = ({
 
     prevMessagesRef.current = messages
   }, [messages, scrollToBottomSmooth])
+
+  // Ensure spacer grows as content grows during streaming
+  useEffect(() => {
+    if (!viewportRef.current || messages.length === 0) return
+
+    // Recalculate spacer to ensure scroll range adapts to growing content
+    requestAnimationFrame(() => {
+      const viewport = viewportRef.current
+      if (!viewport) return
+
+      const allMessages = viewport.querySelectorAll('[data-role]')
+      if (allMessages.length === 0) return
+
+      // Get the last message position (could be user or assistant)
+      const lastMessage = allMessages[allMessages.length - 1]
+      const lastMessageBottom = (lastMessage as HTMLElement).offsetTop + (lastMessage as HTMLElement).offsetHeight
+
+      // Spacer ensures we can scroll content naturally
+      // Minimum: viewport height OR enough to keep some content below fold
+      const neededHeight = Math.max(
+        viewport.clientHeight, // Minimum: allows scrolling
+        lastMessageBottom + 100 // Small 100px buffer (reduced from 30% viewport)
+      )
+
+      setSpacerHeight(prev => {
+        const prevHeight = parseInt(prev) || 0
+        // Only grow the spacer, never shrink (prevents scroll jumps during streaming)
+        return `${Math.max(prevHeight, neededHeight)}px`
+      })
+    })
+  }, [messages])
 
   // Handle scroll to show/hide scroll button
   const handleScroll = () => {
@@ -136,7 +262,7 @@ export const Thread: FC<ThreadProps> = ({
             ))}
 
             {messages.length > 0 && (
-              <div className="aui-thread-viewport-spacer min-h-8 grow" />
+              <div className="aui-thread-viewport-spacer" style={{ minHeight: spacerHeight }} />
             )}
 
             <Composer
