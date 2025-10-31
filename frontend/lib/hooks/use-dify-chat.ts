@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Message, MessageFile, DifyMessage, DifyMessagesResponse } from '@/lib/types/chat'
 
@@ -85,9 +85,8 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
       }
 
       // Transform all messages to UI format
-      // Dify returns newest first, reverse to get chronological order
+      // Dify returns messages in chronological order (oldest first)
       const transformedMessages: Message[] = allMessages
-        .reverse()
         .flatMap((msg) => [
           {
             id: `${msg.id}-user`,
@@ -113,13 +112,11 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
     placeholderData: (previousData) => previousData, // Keep previous messages visible during refetch
   })
 
-  // Combine historical + streaming messages
-  const messages = [...historicalMessages, ...streamingMessages]
-  console.log('[Messages] Array created', {
-    historicalCount: historicalMessages.length,
-    streamingCount: streamingMessages.length,
-    totalCount: messages.length
-  })
+  // Combine historical + streaming messages (memoized to prevent Fast Refresh issues)
+  const messages = useMemo(
+    () => [...historicalMessages, ...streamingMessages],
+    [historicalMessages, streamingMessages]
+  )
 
   /**
    * Send a message and stream the response
@@ -369,19 +366,26 @@ export function useDifyChat({ userId, conversationId }: UseDifyChatProps): UseDi
           }
         }
 
-        // Pre-populate the messages cache for the new conversation to prevent white flash
-        // This ensures that when conversationId changes and the query enables, there's already data
-        if (newConversationId && currentMessages.length > 0) {
-          console.log('[Cache] Pre-populating messages for new conversation', {
-            conversationId: newConversationId,
-            messageCount: currentMessages.length
+        // Update cache based on conversation type
+        if (newConversationId) {
+          // NEW conversation: Pre-populate cache (server has no data yet)
+          const historicalMessages = currentMessages.map(msg => ({
+            ...msg,
+            isHistorical: true,
+            isLoading: false
+          }))
+
+          queryClient.setQueryData(['messages', newConversationId], historicalMessages)
+        } else if (conversationId) {
+          // EXISTING conversation: Refetch from server to get all messages
+          await queryClient.invalidateQueries({
+            queryKey: ['messages', conversationId],
+            refetchType: 'active' // Only refetch if query is currently active
           })
-          queryClient.setQueryData(['messages', newConversationId], currentMessages)
         }
 
-        // Clear streaming messages (they're now safely cached)
+        // Clear streaming messages (now in cache or being refetched)
         setStreamingMessages([])
-        console.log('[StreamingMessages] Cleared')
 
         return newConversationId
           ? {

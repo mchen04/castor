@@ -7,12 +7,12 @@ const isDev = process.env.NODE_ENV === 'development'
 // Based on official requirements from Next.js, Clerk, Stripe, Supabase, and Dify
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ''} https://challenges.cloudflare.com https://js.stripe.com https://*.clerk.accounts.dev https://clerk.trycastor.dev;
+  script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ''} https://challenges.cloudflare.com https://js.stripe.com https://*.clerk.accounts.dev https://clerk.trycastor.dev https://va.vercel-scripts.com;
   connect-src 'self' https://*.clerk.accounts.dev https://clerk.trycastor.dev https://clerk-telemetry.com https://api.stripe.com https://*.supabase.co wss://*.supabase.co https://api.dify.ai vitals.vercel-insights.com;
   img-src 'self' data: blob: https://img.clerk.com https://*.stripe.com https://*.supabase.co https://clerk.trycastor.dev;
   frame-src 'self' https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com;
-  style-src 'self' 'unsafe-inline';
-  font-src 'self';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
   worker-src 'self' blob:;
   object-src 'none';
   base-uri 'self';

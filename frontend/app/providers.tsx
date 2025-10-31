@@ -43,10 +43,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {/* DevTools only appear in development, automatically excluded from production */}
+      {/* DevTools temporarily disabled to prevent Fast Refresh during chat operations
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} position="bottom" />
       )}
+      */}
     </QueryClientProvider>
   )
 }

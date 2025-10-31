@@ -313,8 +313,6 @@ interface MessageProps {
 }
 
 const AssistantMessage: FC<MessageProps> = React.memo(({ message }) => {
-  console.log('[AssistantMessage] Render', { id: message.id, isHistorical: message.isHistorical })
-
   const [copied, setCopied] = useState(false)
   const [skipRequested, setSkipRequested] = useState(false)
 
@@ -413,11 +411,17 @@ const AssistantMessage: FC<MessageProps> = React.memo(({ message }) => {
       )}
     </div>
   )
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if message content or state actually changed
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.message.isLoading === nextProps.message.isLoading &&
+    prevProps.message.isHistorical === nextProps.message.isHistorical
+  )
 })
 
 const UserMessage: FC<MessageProps> = React.memo(({ message }) => {
-  console.log('[UserMessage] Render', { id: message.id, isHistorical: message.isHistorical })
-
   return (
     <div
       className={`aui-user-message-root mx-auto grid w-full max-w-[var(--thread-max-width)] auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-2 px-2 py-4 first:mt-3 last:mb-5 [&:where(>*)]:col-start-2${!message.isHistorical ? ' animate-in duration-150 ease-out fade-in slide-in-from-bottom-1' : ''}`}
@@ -429,5 +433,12 @@ const UserMessage: FC<MessageProps> = React.memo(({ message }) => {
         </div>
       </div>
     </div>
+  )
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if message content changed
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.message.isHistorical === nextProps.message.isHistorical
   )
 })

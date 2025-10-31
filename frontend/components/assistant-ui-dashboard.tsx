@@ -14,8 +14,6 @@ interface AssistantUIDashboardProps {
 }
 
 export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
-  console.log('[Dashboard] Render')
-
   const { user } = useUser()
   const { signOut } = useClerk()
 

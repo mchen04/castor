@@ -156,7 +156,6 @@ export function useConversations(userId: string): UseConversationsResult {
       return data
     },
     onMutate: async ({ conversationId, newName }) => {
-      console.log('[Rename] onMutate - Starting optimistic update', { conversationId, newName })
       await queryClient.cancelQueries({ queryKey: ['conversations', userId] })
 
       const previousData = queryClient.getQueryData(['conversations', userId])
@@ -180,11 +179,9 @@ export function useConversations(userId: string): UseConversationsResult {
         }
       )
 
-      console.log('[Rename] onMutate - Optimistic update complete')
       return { previousData }
     },
     onError: (err, variables, context) => {
-      console.log('[Rename] onError - Rolling back', { err: err.message })
       if (context?.previousData) {
         queryClient.setQueryData(['conversations', userId], context.previousData)
       }
