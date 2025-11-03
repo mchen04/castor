@@ -115,29 +115,32 @@ export const Thread: FC<ThreadProps> = ({
               console.log('🔍 [SCROLL DEBUG] Attempting scroll:', {
                 targetScrollTop,
                 scrollTopBefore,
-                method: 'direct assignment (instant)',
+                method: 'scrollTo smooth',
                 viewportHeight: viewport.clientHeight
               })
 
-              // Try direct assignment (instant scroll, no animation)
-              viewport.scrollTop = targetScrollTop
-
-              // Check immediately
-              console.log('🔍 [SCROLL DEBUG] Immediate check after assignment:', {
-                scrollTop: viewport.scrollTop,
-                changed: viewport.scrollTop !== scrollTopBefore
+              // Smooth scroll to position user message at top
+              viewport.scrollTo({
+                top: targetScrollTop,
+                behavior: 'smooth'
               })
 
-              // Check again after delay for smooth scroll
+              // Check scroll initiated (won't be at target yet due to smooth animation)
+              console.log('🔍 [SCROLL DEBUG] Smooth scroll initiated:', {
+                scrollTop: viewport.scrollTop,
+                isAnimating: viewport.scrollTop !== targetScrollTop
+              })
+
+              // Check again after smooth scroll animation completes (~500ms)
               setTimeout(() => {
-                console.log('🔍 [SCROLL DEBUG] Final check after 100ms:', {
+                console.log('🔍 [SCROLL DEBUG] Smooth scroll completed:', {
                   scrollTopBefore,
                   targetScrollTop,
                   scrollTopAfter: viewport.scrollTop,
                   changed: scrollTopBefore !== viewport.scrollTop,
                   reachedTarget: Math.abs(viewport.scrollTop - targetScrollTop) < 5
                 })
-              }, 100)
+              }, 500)
             } else {
               console.error('❌ [SCROLL DEBUG] User message not found! allMessages.length:', allMessages?.length)
             }
