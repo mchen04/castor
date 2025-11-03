@@ -27,7 +27,7 @@ export interface UserMenuProps {
   align?: 'start' | 'center' | 'end'
 }
 
-export function UserMenu({ menuItems, position = 'header', align = 'end' }: UserMenuProps) {
+export function UserMenu({ menuItems, align = 'end' }: UserMenuProps) {
   const { user } = useUser()
   const [isLoading, setIsLoading] = useState(false)
 

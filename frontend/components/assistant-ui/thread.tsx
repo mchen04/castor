@@ -555,6 +555,8 @@ const AssistantMessage: FC<MessageProps> = React.memo(({ message }) => {
   )
 })
 
+AssistantMessage.displayName = 'AssistantMessage'
+
 const UserMessage: FC<MessageProps> = React.memo(({ message }) => {
   return (
     <div
@@ -576,3 +578,5 @@ const UserMessage: FC<MessageProps> = React.memo(({ message }) => {
     prevProps.message.isHistorical === nextProps.message.isHistorical
   )
 })
+
+UserMessage.displayName = 'UserMessage'

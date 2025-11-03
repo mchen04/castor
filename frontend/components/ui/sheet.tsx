@@ -135,4 +135,6 @@ export {
   SheetFooter,
   SheetTitle,
   SheetDescription,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  SheetClose,
 }

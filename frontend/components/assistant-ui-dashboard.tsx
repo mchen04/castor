@@ -30,12 +30,10 @@ export function AssistantUIDashboard({ userId }: AssistantUIDashboardProps) {
     conversations,
     isLoading: conversationsLoading,
     hasMore,
-    loadConversations,
     loadMoreConversations,
     createConversation,
     deleteConversation,
     renameConversation,
-    updateConversationName,
     addConversation,
   } = useConversations(userId)
 
