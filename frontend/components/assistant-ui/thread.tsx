@@ -38,7 +38,7 @@ export const Thread: FC<ThreadProps> = ({
   const [inputValue, setInputValue] = useState("")
   const viewportRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
-  const [spacerHeight, setSpacerHeight] = useState("32px") // Dynamic spacer height
+  const [spacerHeight, setSpacerHeight] = useState("32px") // Spacer to prevent composer overlap
   const { scrollToBottom: scrollToBottomSmooth } = useScrollToMessage()
 
   // Track previous message length to detect new messages
@@ -109,20 +109,14 @@ export const Thread: FC<ThreadProps> = ({
               })
 
               const scrollTopBefore = viewport.scrollTop
-              // Scroll to position the user message at the top with 16px padding
-              const targetScrollTop = Math.max(0, messageOffsetTop - 16)
-
-              // DYNAMIC SPACER: Set to viewport height to allow scrolling message to top
-              // This is the minimum needed - grows automatically as content expands
-              const neededSpacerHeight = viewport.clientHeight
-              setSpacerHeight(`${neededSpacerHeight}px`)
+              // Scroll to position the user message at the top with 12px padding (matching first:mt-3)
+              const targetScrollTop = Math.max(0, messageOffsetTop - 12)
 
               console.log('🔍 [SCROLL DEBUG] Attempting scroll:', {
                 targetScrollTop,
                 scrollTopBefore,
                 method: 'direct assignment (instant)',
-                calculatedSpacerHeight: neededSpacerHeight,
-                viewportClientHeight: viewport.clientHeight
+                viewportHeight: viewport.clientHeight
               })
 
               // Try direct assignment (instant scroll, no animation)
@@ -178,34 +172,45 @@ export const Thread: FC<ThreadProps> = ({
     prevMessagesRef.current = messages
   }, [messages, scrollToBottomSmooth])
 
-  // Ensure spacer grows as content grows during streaming
+  // Dynamically adjust spacer for scrolling and composer positioning
   useEffect(() => {
-    if (!viewportRef.current || messages.length === 0) return
+    if (!viewportRef.current || messages.length < 2) return
 
-    // Recalculate spacer to ensure scroll range adapts to growing content
     requestAnimationFrame(() => {
       const viewport = viewportRef.current
       if (!viewport) return
 
       const allMessages = viewport.querySelectorAll('[data-role]')
-      if (allMessages.length === 0) return
+      if (allMessages.length < 2) return
 
-      // Get the last message position (could be user or assistant)
+      // Get user message position (second to last)
+      const userMessage = allMessages[allMessages.length - 2]
+      const messageOffsetTop = (userMessage as HTMLElement).offsetTop
+
+      // Get total content height (all messages)
       const lastMessage = allMessages[allMessages.length - 1]
-      const lastMessageBottom = (lastMessage as HTMLElement).offsetTop + (lastMessage as HTMLElement).offsetHeight
+      const contentHeight = (lastMessage as HTMLElement).offsetTop + (lastMessage as HTMLElement).offsetHeight
 
-      // Spacer ensures we can scroll content naturally
-      // Minimum: viewport height OR enough to keep some content below fold
-      const neededHeight = Math.max(
-        viewport.clientHeight, // Minimum: allows scrolling
-        lastMessageBottom + 100 // Small 100px buffer (reduced from 30% viewport)
+      // Get composer height for minimum spacer
+      const composer = viewport.querySelector('.aui-composer-wrapper')
+      const composerHeight = composer ? (composer as HTMLElement).offsetHeight : 80
+
+      // Calculate spacer needed to scroll user message to top (12px from top)
+      // For scroll to work: scrollHeight >= targetScrollTop + viewportHeight
+      // targetScrollTop = messageOffsetTop - 12
+      // scrollHeight = contentHeight + spacer
+      // So: contentHeight + spacer >= messageOffsetTop - 12 + viewportHeight
+      const targetScrollTop = Math.max(0, messageOffsetTop - 12)
+      const minScrollHeight = targetScrollTop + viewport.clientHeight
+      const spacerForScrolling = Math.max(0, minScrollHeight - contentHeight)
+
+      // Final spacer: larger of minimum (for composer) or what's needed for scrolling
+      const spacerNeeded = Math.max(
+        composerHeight + 32, // Minimum: prevents composer overlap
+        spacerForScrolling    // For scrolling user message to top
       )
 
-      setSpacerHeight(prev => {
-        const prevHeight = parseInt(prev) || 0
-        // Only grow the spacer, never shrink (prevents scroll jumps during streaming)
-        return `${Math.max(prevHeight, neededHeight)}px`
-      })
+      setSpacerHeight(`${spacerNeeded}px`)
     })
   }, [messages])
 
