@@ -123,6 +123,12 @@ castor-1/
    NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
    NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
 
+   # Dify AI
+   DIFY_API_KEY=your-dify-api-key
+
+   # OpenRouter (for title generation)
+   OPENROUTER_API_KEY=your-openrouter-api-key
+
    # App
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
    ```
@@ -140,17 +146,20 @@ castor-1/
 
 **Supabase Tables:**
 
-### `users` (via Clerk sync)
+### `users`
 ```sql
-- id: uuid (primary key, synced from Clerk)
+- id: uuid (primary key, generated)
+- clerk_id: text (unique, NOT NULL - Clerk user identifier)
 - email: text
-- created_at: timestamp
-- stripe_customer_id: text
-- stripe_subscription_id: text
-- subscription_status: text
-- current_period_end: timestamp
-- cancel_at_period_end: boolean
-- in_grace_period: boolean
+- has_paid: boolean (default: false)
+- stripe_customer_id: text (unique)
+- stripe_subscription_id: text (unique)
+- stripe_subscription_status: text (active, trialing, past_due, canceled, unpaid, etc.)
+- stripe_subscription_current_period_end: timestamptz
+- stripe_subscription_cancel_at_period_end: boolean
+- in_grace_period: boolean (default: false)
+- created_at: timestamptz
+- updated_at: timestamptz (auto-updated)
 ```
 
 ### `processed_events` (webhook idempotency)
@@ -165,17 +174,18 @@ castor-1/
 ## 💳 Payment Flow
 
 ### Subscription Flow
-1. User signs in with Google OAuth (Clerk)
-2. Dashboard checks payment status from Supabase `users` table
-3. If not subscribed → PaywallCard component shows Stripe Checkout button
-4. User clicks "Subscribe" → `/api/checkout` creates Stripe Checkout session
-5. User completes payment on Stripe
-6. Stripe sends `checkout.session.completed` webhook → `/api/webhook/stripe`
-7. Webhook handler:
+1. User signs in with Clerk (Google/GitHub OAuth or email/password)
+2. Clerk redirects to Dashboard
+3. Dashboard checks payment status from Supabase `users` table (by `clerk_id`)
+4. If not subscribed → PaywallCard component shows Stripe Checkout button
+5. User clicks "Subscribe" → `/api/checkout` creates Stripe Checkout session
+6. User completes payment on Stripe
+7. Stripe sends `checkout.session.completed` webhook → `/api/webhook/stripe`
+8. Webhook handler:
    - Verifies signature
    - Checks idempotency (`processed_events` table)
    - Updates `users` table with subscription metadata
-8. User returns to dashboard → sees chatbot
+9. User returns to dashboard → sees chatbot
 
 ### Recurring Payments
 - **Success:** `invoice.payment_succeeded` webhook clears grace period
@@ -188,30 +198,44 @@ castor-1/
 
 ---
 
-## 🤖 Dify Chatbot Integration
+## 🤖 Dify AI Integration
 
-The Dify AI chatbot is embedded via iframe with:
-- **User Identification:** Clerk user ID is encoded (GZIP + Base64 + URL-encoded) and passed as `sys.user_id` parameter
-- **Cross-Device Persistence:** Conversations persist across devices via user_id
-- **Microphone Access:** Voice input enabled for chatbot interactions
+The Dify AI chatbot is integrated via **API proxy pattern** using Vercel Serverless Functions:
 
-**Implementation:**
-```typescript
-// components/dify-chatbot.tsx
-const encodedUserId = encodeDifyUserId(userId)
-const chatbotUrl = `https://udify.app/chat/fIZjEA7ZAmd1LKh8?sys.user_id=${encodedUserId}`
+**Key Features:**
+- **API Proxy:** All Dify API calls routed through `/api/dify/*` endpoints
+- **Authentication:** Clerk user verification + Supabase subscription check
+- **User Identification:** Clerk user ID passed to Dify API for conversation persistence
+- **Rate Limiting:** 30 requests/minute per user
+- **Streaming Chat:** Real-time responses via Server-Sent Events (SSE)
+- **Error Handling:** User-friendly error messages with retry logic
+- **Title Generation:** AI-powered conversation titles via OpenRouter
+
+**Architecture:**
 ```
+Client → /api/dify/chat → Clerk Auth → Subscription Check → Dify API → SSE Stream → Client
+```
+
+**API Endpoints:**
+- `POST /api/dify/chat` - Send chat message (streaming)
+- `GET /api/dify/conversations` - List conversations
+- `GET /api/dify/messages` - Get conversation messages
+- `POST /api/dify/delete` - Delete conversation
+- `POST /api/dify/rename` - Rename conversation
+- `POST /api/dify/stop` - Stop generation
+- `POST /api/generate-title` - Generate conversation title
 
 ---
 
 ## 🔐 Authentication & Authorization
 
-**Authentication:** Clerk handles all auth via Google OAuth
+**Authentication:** Clerk handles all auth (Google OAuth, GitHub OAuth, email/password)
 **Authorization:** Middleware + server-side payment checks
 
 ### Middleware (`middleware.ts`)
 - Protects routes except: `/`, `/sign-in`, `/sign-up`, `/api/webhook`
 - Uses Clerk's `clerkMiddleware` for session management
+- Automatic session refresh and CSRF protection
 
 ### Payment Verification
 - **Client-side:** Dashboard reads user data from Supabase
@@ -222,49 +246,47 @@ const chatbotUrl = `https://udify.app/chat/fIZjEA7ZAmd1LKh8?sys.user_id=${encode
 
 ## 📡 API Routes
 
-### `POST /api/checkout`
+### Payment Routes
+
+**`POST /api/checkout`**
 Creates Stripe Checkout session for new subscriptions.
 
-**Request:**
-```json
-{
-  "userId": "user_xxx"
-}
-```
-
-**Response:**
-```json
-{
-  "url": "https://checkout.stripe.com/..."
-}
-```
-
-### `POST /api/customer-portal`
+**`POST /api/customer-portal`**
 Creates Stripe Customer Portal session for billing management.
 
-**Request:**
-```json
-{
-  "customerId": "cus_xxx"
-}
-```
+**`GET /api/verify-checkout`**
+Verifies checkout session completion.
 
-**Response:**
-```json
-{
-  "url": "https://billing.stripe.com/..."
-}
-```
+**`POST /api/webhook/stripe`**
+Handles Stripe webhook events with signature verification and idempotency.
 
-### `POST /api/webhook/stripe`
-Handles Stripe webhook events:
-- `checkout.session.completed`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
-- `invoice.payment_succeeded`
-- `invoice.payment_failed`
+### Dify AI Proxy Routes
 
-**Security:** Verifies webhook signature, checks idempotency
+**`POST /api/dify/chat`**
+Send chat message with streaming SSE response. Requires active subscription. Rate limited to 30 req/min.
+
+**`GET /api/dify/conversations`**
+List user's conversations with pagination.
+
+**`GET /api/dify/messages`**
+Get messages from specific conversation.
+
+**`POST /api/dify/delete`**
+Delete a conversation.
+
+**`POST /api/dify/rename`**
+Rename a conversation.
+
+**`POST /api/dify/stop`**
+Stop generating a streaming response.
+
+**`POST /api/dify/generate-title`**
+Auto-generate conversation title.
+
+### Title Generation
+
+**`POST /api/generate-title`**
+Generate conversation title using OpenRouter AI.
 
 ---
 
@@ -282,9 +304,10 @@ Built with **shadcn/ui** and custom components:
 
 ### Dashboard Components
 - `PaywallCard` - Subscription paywall
-- `DifyChatbot` - AI chatbot embed
+- `AssistantUIDashboard` - AI chatbot interface with Assistant UI
 - `GracePeriodWarning` - Payment failure alert
-- `AvatarMenu` - User dropdown with billing link
+- `UserMenu` - User dropdown with billing link
+- `CheckoutVerifier` - Verify checkout completion
 
 ### UI Primitives (shadcn/ui)
 - Button, Card, Dialog, Dropdown, Input, Select, Tabs, Toast, etc.
