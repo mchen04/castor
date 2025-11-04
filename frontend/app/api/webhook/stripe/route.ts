@@ -178,11 +178,33 @@ async function processWebhookEvent(event: Stripe.Event) {
     const invoice = event.data.object as Stripe.Invoice
     const customerId = invoice.customer as string
 
+    // Type assertion: subscription field exists on subscription invoices but not in Stripe's Invoice type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subscriptionField = (invoice as any).subscription
+    const subscriptionId = typeof subscriptionField === 'string'
+      ? subscriptionField
+      : subscriptionField?.id
+
+    if (!subscriptionId) {
+      console.log('No subscription ID found in invoice, skipping')
+      return
+    }
+
+    // Retrieve actual subscription to get current status and period_end
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+
+    const currentPeriodEnd =
+      'current_period_end' in subscription &&
+      typeof subscription.current_period_end === 'number'
+        ? new Date(subscription.current_period_end * 1000).toISOString()
+        : null
+
     const { error } = await supabaseAdmin
       .from('users')
       .update({
         has_paid: true,
-        stripe_subscription_status: 'active',
+        stripe_subscription_status: subscription.status, // Use actual status instead of hardcoding 'active'
+        stripe_subscription_current_period_end: currentPeriodEnd,
         in_grace_period: false,
         updated_at: new Date().toISOString(),
       })
@@ -201,6 +223,7 @@ async function processWebhookEvent(event: Stripe.Event) {
       eventId: event.id,
       invoiceId: invoice.id,
       customerId,
+      subscriptionStatus: subscription.status,
     })
   }
 

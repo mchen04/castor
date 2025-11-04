@@ -28,11 +28,13 @@ export async function POST() {
       mode: 'subscription',
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
-      client_reference_id: userId, // Clerk user ID
+      client_reference_id: userId, // Clerk user ID (backup reference)
       customer_email: userEmail,
-      metadata: {
-        clerk_user_id: userId
-      }
+      subscription_data: {
+        metadata: {
+          clerk_user_id: userId, // Available in all subscription webhooks
+        },
+      },
     })
 
     return NextResponse.json({ url: session.url })
