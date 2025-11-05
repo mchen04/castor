@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -64,6 +64,83 @@ export async function POST(req: Request) {
 
     // Update the user in Supabase
     const supabaseAdmin = createAdminClient()
+
+    // Check if user exists and create if necessary
+    const { data: existingUser, error: selectError } = await supabaseAdmin
+      .from('users')
+      .select('id, has_paid, stripe_subscription_status')
+      .eq('clerk_id', userId)
+      .single()
+
+    if (selectError && selectError.code !== 'PGRST116') {
+      // PGRST116 is "not found" error, which is expected for new users
+      console.error('Failed to check user existence:', {
+        userId,
+        sessionId: session_id,
+        error: selectError.message,
+        errorCode: selectError.code,
+      })
+      return NextResponse.json(
+        { error: 'Database connection error - please try again' },
+        { status: 500 }
+      )
+    }
+
+    // Idempotency check: skip if subscription is already active
+    if (existingUser?.has_paid && existingUser.stripe_subscription_status === 'active') {
+      console.log('Subscription already active, skipping duplicate processing:', {
+        userId,
+        sessionId: session_id,
+        existingStatus: existingUser.stripe_subscription_status,
+      })
+      return NextResponse.json({
+        success: true,
+        subscription: {
+          id: subscriptionId,
+          status: subscription.status,
+          current_period_end:
+            'current_period_end' in subscription
+              ? subscription.current_period_end
+              : null,
+        },
+      })
+    }
+
+    // Create user if they don't exist
+    if (!existingUser) {
+      const user = await currentUser()
+      const userEmail = user?.emailAddresses?.[0]?.emailAddress || ''
+
+      const { error: insertError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          clerk_id: userId,
+          email: userEmail,
+          created_at: new Date().toISOString(),
+        })
+
+      if (insertError) {
+        console.error('Failed to create user record:', {
+          userId,
+          sessionId: session_id,
+          email: userEmail,
+          error: insertError.message,
+          errorCode: insertError.code,
+          errorDetails: insertError.details,
+        })
+        return NextResponse.json(
+          { error: 'Failed to create account - please contact support' },
+          { status: 500 }
+        )
+      }
+
+      console.log('Created new user record:', {
+        userId,
+        email: userEmail,
+      })
+    }
+
+    // Now update the user with subscription details
     const { error } = await supabaseAdmin
       .from('users')
       .update({
@@ -83,10 +160,14 @@ export async function POST(req: Request) {
       console.error('Failed to update user after checkout verification:', {
         userId,
         sessionId: session_id,
+        subscriptionId,
         error: error.message,
+        errorCode: error.code,
+        errorDetails: error.details,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       })
       return NextResponse.json(
-        { error: 'Failed to activate subscription' },
+        { error: 'Failed to activate subscription - please contact support' },
         { status: 500 }
       )
     }
