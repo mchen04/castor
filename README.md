@@ -9,19 +9,21 @@ A premium **Generative Engine Optimization (GEO)** consultant chatbot platform w
 ## 🏗️ Architecture
 
 **Tech Stack:**
-- **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, shadcn/ui
-- **Authentication:** Clerk (Google OAuth)
+- **Frontend:** Next.js 15 (App Router), React 18, TypeScript, Tailwind CSS, shadcn/ui
+- **State Management:** TanStack React Query (server state + caching)
+- **Authentication:** Clerk (Google OAuth, GitHub OAuth, email/password)
 - **Database:** Supabase (PostgreSQL)
 - **Payments:** Stripe (Subscriptions)
-- **AI Chatbot:** Dify AI (embedded iframe)
+- **AI Chatbot:** Dify AI (API proxy with streaming SSE)
 - **Hosting:** Vercel
 - **Styling:** Tailwind CSS + shadcn/ui components
 
 **Key Features:**
-- ✅ Google OAuth authentication via Clerk
+- ✅ Multi-provider authentication via Clerk (Google, GitHub, email/password)
 - ✅ Subscription-based paywall ($59.99/month)
 - ✅ Stripe Checkout integration with webhook handling
-- ✅ Embedded Dify AI chatbot with cross-device conversation persistence
+- ✅ AI chatbot with real-time streaming and conversation persistence
+- ✅ Rate limiting (30 requests/minute per user)
 - ✅ Payment grace period for failed recurring payments
 - ✅ Stripe Customer Portal for self-service billing
 - ✅ Fully responsive landing page with SEO optimization
@@ -37,6 +39,7 @@ castor-1/
 │   ├── app/                        # Next.js App Router
 │   │   ├── page.tsx               # Landing page
 │   │   ├── layout.tsx             # Root layout with Clerk provider
+│   │   ├── providers.tsx          # TanStack Query provider
 │   │   ├── loading.tsx            # Global loading state
 │   │   ├── sign-in/               # Clerk sign-in page
 │   │   ├── sign-up/               # Clerk sign-up page
@@ -44,25 +47,57 @@ castor-1/
 │   │   └── api/                   # API routes
 │   │       ├── checkout/          # Stripe Checkout session creation
 │   │       ├── customer-portal/   # Stripe Customer Portal session
+│   │       ├── verify-checkout/   # Verify checkout completion
+│   │       ├── dify/              # Dify AI proxy endpoints
+│   │       │   ├── chat/          # Stream chat messages
+│   │       │   ├── conversations/ # List conversations
+│   │       │   ├── messages/      # Get conversation messages
+│   │       │   ├── delete/        # Delete conversation
+│   │       │   ├── rename/        # Rename conversation
+│   │       │   ├── stop/          # Stop generation
+│   │       │   └── generate-title/ # Generate conversation title
+│   │       ├── generate-title/    # OpenRouter title generation
 │   │       └── webhook/stripe/    # Stripe webhook handler
 │   ├── components/                # React components
 │   │   ├── ui/                    # shadcn/ui components
 │   │   ├── landing/               # Landing page sections
+│   │   │   ├── hero-section.tsx
+│   │   │   ├── value-proposition-section.tsx
+│   │   │   ├── services-section.tsx
+│   │   │   ├── testimonials-section.tsx
+│   │   │   ├── final-cta-section.tsx
+│   │   │   └── chat-preview.tsx
+│   │   ├── assistant-ui/          # Chat interface components
+│   │   │   ├── thread.tsx         # Conversation view
+│   │   │   ├── threadlist-sidebar.tsx # Conversation list
+│   │   │   └── sidebar/           # Sidebar subcomponents
+│   │   ├── assistant-ui-dashboard.tsx # Main chat dashboard
 │   │   ├── header.tsx             # Site header with navigation
 │   │   ├── footer.tsx             # Site footer
-│   │   ├── dify-chatbot.tsx       # Dify AI chatbot embed
 │   │   ├── paywall-card.tsx       # Subscription paywall
 │   │   ├── grace-period-warning.tsx # Payment failure warning
-│   │   └── avatar-menu.tsx        # User menu with billing link
+│   │   ├── checkout-verifier.tsx  # Verify checkout completion
+│   │   └── user-menu.tsx          # User menu with billing link
 │   ├── lib/                       # Utilities and helpers
+│   │   ├── auth/
+│   │   │   └── verify-subscription.ts # Subscription verification
+│   │   ├── dify/
+│   │   │   ├── client.ts          # Centralized Dify API client
+│   │   │   └── errors.ts          # Error handling utilities
+│   │   ├── hooks/
+│   │   │   ├── use-dify-chat.ts   # Chat state & streaming
+│   │   │   └── use-conversations.ts # Conversation management
+│   │   ├── middleware/
+│   │   │   └── rate-limit.ts      # In-memory rate limiting
+│   │   ├── openrouter/
+│   │   │   └── title-generator.ts # AI title generation
 │   │   ├── supabase/
 │   │   │   ├── server.ts          # Server-side Supabase client
 │   │   │   └── admin.ts           # Admin Supabase client
 │   │   ├── content/
 │   │   │   └── landing-page-content.ts  # Landing page content
 │   │   ├── types.ts               # TypeScript type definitions
-│   │   ├── utils.ts               # Utility functions (cn, etc.)
-│   │   └── dify-url-encoder.ts    # Dify user ID encoder
+│   │   └── utils.ts               # Utility functions (cn, etc.)
 │   ├── middleware.ts              # Clerk authentication middleware
 │   ├── .env.local                 # Local environment variables
 │   └── .env.production            # Production env reference
@@ -296,15 +331,17 @@ Built with **shadcn/ui** and custom components:
 
 ### Landing Page Components
 - `HeroSection` - Hero with CTA
-- `PricingComparisonSection` - Pricing table
-- `SolutionSection` - Value proposition
+- `ValuePropositionSection` - Value proposition with feature highlights
 - `ServicesSection` - Feature cards
 - `TestimonialsSection` - Customer testimonials
 - `FinalCTASection` - Bottom CTA
+- `ChatPreview` - Interactive chat preview demo
 
 ### Dashboard Components
 - `PaywallCard` - Subscription paywall
-- `AssistantUIDashboard` - AI chatbot interface with Assistant UI
+- `AssistantUIDashboard` - Main chat dashboard orchestrator
+- `Thread` - Conversation message view
+- `ThreadlistSidebar` - Conversation list with sidebar navigation
 - `GracePeriodWarning` - Payment failure alert
 - `UserMenu` - User dropdown with billing link
 - `CheckoutVerifier` - Verify checkout completion
@@ -314,7 +351,7 @@ Built with **shadcn/ui** and custom components:
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Quality Checks
 
 **Type Checking:**
 ```bash
@@ -324,6 +361,17 @@ npm run type-check
 **Linting:**
 ```bash
 npm run lint
+```
+
+**Unused Code Detection:**
+```bash
+npm run check:unused    # Detect unused code and dependencies
+npm run fix:unused      # Auto-fix detected unused code
+```
+
+**Run All Checks:**
+```bash
+npm run check:all       # Type + Lint + Unused detection
 ```
 
 **Build:**
