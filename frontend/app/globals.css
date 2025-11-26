@@ -279,6 +279,38 @@
   }
 }
 
+/* Hero Entrance Animation */
+@keyframes hero-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtle Float Animation */
+@keyframes float-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Glow Pulse for Accent Elements */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px color-mix(in oklch, var(--accent), transparent 80%);
+  }
+  50% {
+    box-shadow: 0 0 40px color-mix(in oklch, var(--accent), transparent 60%);
+  }
+}
+
 /* ============================================
    CUSTOM UTILITY CLASSES (Tailwind v4)
    ============================================ */
@@ -300,9 +332,71 @@
   animation: typewriter-blink 1s step-end infinite;
 }
 
-/* Hero Background Gradient */
+/* Hero Entrance Animation */
+@utility animate-hero-entrance {
+  animation: hero-entrance 0.8s ease-out both;
+}
+
+/* Float Animation */
+@utility animate-float-subtle {
+  animation: float-subtle 6s ease-in-out infinite;
+}
+
+/* Glow Pulse Animation */
+@utility animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Staggered Animation Delays */
+@utility animate-delay-100 {
+  animation-delay: 0.1s;
+}
+
+@utility animate-delay-200 {
+  animation-delay: 0.2s;
+}
+
+@utility animate-delay-300 {
+  animation-delay: 0.3s;
+}
+
+@utility animate-delay-400 {
+  animation-delay: 0.4s;
+}
+
+@utility animate-delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* Hero Background Gradient (Original - Subtle) */
 @utility gradient-hero {
   background: linear-gradient(to bottom right, color-mix(in oklch, var(--primary), transparent 90%) 0%, var(--background) 50%, var(--background) 100%);
+}
+
+/* Stripe-Inspired Hero Gradient - Stronger, More Visible */
+@utility gradient-hero-stripe {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%,
+      color-mix(in oklch, var(--primary), transparent 40%) 0%,
+      transparent 60%),
+    radial-gradient(ellipse 50% 30% at 80% 10%,
+      color-mix(in oklch, var(--accent), transparent 60%) 0%,
+      transparent 40%),
+    var(--background);
+}
+
+/* CTA Section Gradient */
+@utility gradient-cta-stripe {
+  background:
+    radial-gradient(ellipse 100% 80% at 50% 120%,
+      color-mix(in oklch, var(--accent), transparent 80%) 0%,
+      transparent 70%),
+    var(--background);
+}
+
+/* Accent Card Glow Effect */
+@utility glow-accent {
+  box-shadow: 0 0 40px color-mix(in oklch, var(--accent), transparent 70%);
 }
 
 /* ============================================

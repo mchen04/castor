@@ -1,47 +1,24 @@
 import type { LucideIcon } from "lucide-react"
 
 /**
- * Hero section content structure
+ * Hero section content structure - Simplified
  */
 export interface HeroContent {
-  badge: string
   headline: string
   subheadline: string
   primaryCTA: {
     text: string
     href: string
   }
-  secondaryCTA: {
-    text: string
-    href: string
-  }
-  researchCounter: {
-    label: string
-    value: number
-    updatedText?: string
-  }
 }
 
 /**
- * Comparison column for pricing/feature comparisons
+ * Sample conversation for chat preview
  */
-export interface ComparisonColumn {
-  icon: LucideIcon
-  title: string
-  bulletPoints: string[]
-  bottomStat: string
-  highlighted?: boolean
-  variant?: "default" | "accent" | "primary"
-}
-
-/**
- * Feature card data structure
- */
-export interface FeatureCardData {
-  icon: LucideIcon
-  title: string
-  description: string
-  iconColor: "primary" | "accent" | "secondary" | "warning"
+export interface SampleConversation {
+  id: string
+  question: string
+  answer: string
 }
 
 /**
@@ -62,25 +39,23 @@ export interface ServiceTier {
 }
 
 /**
- * Testimonial structure
+ * Enhanced testimonial with metrics
  */
-export interface Testimonial {
+export interface EnhancedTestimonial {
   quote: string
   author: string
+  role: string
+  company: string
+  metric: {
+    label: string
+    value: string
+    timeframe: string
+  }
+  featured?: boolean
 }
 
 /**
- * Step in "How It Works" section
- */
-export interface HowItWorksStep {
-  number: number
-  title: string
-  description: string
-  colorClass: string
-}
-
-/**
- * Final CTA section content
+ * Final CTA section content - Simplified
  */
 export interface FinalCTAContent {
   headline: string
@@ -89,19 +64,5 @@ export interface FinalCTAContent {
     text: string
     href: string
   }
-  secondaryCTA: {
-    text: string
-    href: string
-  }
   guarantee: string
-}
-
-/**
- * AI platform visibility metrics
- */
-export interface VisibilityMetric {
-  icon: LucideIcon
-  label: string
-  progress: number
-  colorClass: string
 }
