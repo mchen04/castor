@@ -1,478 +1,60 @@
-# Castor - GEO Chatbot Platform
+# Castor — local business workspace
 
-A premium **Generative Engine Optimization (GEO)** consultant chatbot platform with subscription-based access ($59.99/month). Castor helps businesses optimize their content for AI search engines like ChatGPT, Perplexity, and Google AI Overviews.
+One compact local app for business facts, updates, structured reference pages, approved public-site captures and an optional assistant. Consolidates useful code/resources from LocRaven, site-mirror-ai and GBP into Castor. No account, subscription, hosted database or AI key is needed for independent workflows.
 
-🌐 **Live:** [trycastor.dev](https://trycastor.dev)
+## Run locally
 
----
+Node 22.19+ (tested on Node 26.3.1) and npm:
 
-## 🏗️ Architecture
-
-**Tech Stack:**
-- **Frontend:** Next.js 15 (App Router), React 18, TypeScript, Tailwind CSS, shadcn/ui
-- **State Management:** TanStack React Query (server state + caching)
-- **Authentication:** Clerk (Google OAuth, GitHub OAuth, email/password)
-- **Database:** Supabase (PostgreSQL)
-- **Payments:** Stripe (Subscriptions)
-- **AI Chatbot:** Dify AI (API proxy with streaming SSE)
-- **Hosting:** Vercel
-- **Styling:** Tailwind CSS + shadcn/ui components
-
-**Key Features:**
-- ✅ Multi-provider authentication via Clerk (Google, GitHub, email/password)
-- ✅ Subscription-based paywall ($59.99/month)
-- ✅ Stripe Checkout integration with webhook handling
-- ✅ AI chatbot with real-time streaming and conversation persistence
-- ✅ Rate limiting (30 requests/minute per user)
-- ✅ Payment grace period for failed recurring payments
-- ✅ Stripe Customer Portal for self-service billing
-- ✅ Fully responsive landing page with SEO optimization
-- ✅ Server-side payment verification
-
----
-
-## 📂 Project Structure
-
-```
-castor-1/
-├── frontend/                       # Next.js application
-│   ├── app/                        # Next.js App Router
-│   │   ├── page.tsx               # Landing page
-│   │   ├── layout.tsx             # Root layout with Clerk provider
-│   │   ├── providers.tsx          # TanStack Query provider
-│   │   ├── loading.tsx            # Global loading state
-│   │   ├── sign-in/               # Clerk sign-in page
-│   │   ├── sign-up/               # Clerk sign-up page
-│   │   ├── dashboard/             # Protected dashboard (paywall + chatbot)
-│   │   └── api/                   # API routes
-│   │       ├── checkout/          # Stripe Checkout session creation
-│   │       ├── customer-portal/   # Stripe Customer Portal session
-│   │       ├── verify-checkout/   # Verify checkout completion
-│   │       ├── dify/              # Dify AI proxy endpoints
-│   │       │   ├── chat/          # Stream chat messages
-│   │       │   ├── conversations/ # List conversations
-│   │       │   ├── messages/      # Get conversation messages
-│   │       │   ├── delete/        # Delete conversation
-│   │       │   ├── rename/        # Rename conversation
-│   │       │   ├── stop/          # Stop generation
-│   │       │   └── generate-title/ # Generate conversation title
-│   │       ├── generate-title/    # OpenRouter title generation
-│   │       └── webhook/stripe/    # Stripe webhook handler
-│   ├── components/                # React components
-│   │   ├── ui/                    # shadcn/ui components
-│   │   ├── landing/               # Landing page sections
-│   │   │   ├── hero-section.tsx
-│   │   │   ├── value-proposition-section.tsx
-│   │   │   ├── services-section.tsx
-│   │   │   ├── testimonials-section.tsx
-│   │   │   ├── final-cta-section.tsx
-│   │   │   └── chat-preview.tsx
-│   │   ├── assistant-ui/          # Chat interface components
-│   │   │   ├── thread.tsx         # Conversation view
-│   │   │   ├── threadlist-sidebar.tsx # Conversation list
-│   │   │   └── sidebar/           # Sidebar subcomponents
-│   │   ├── assistant-ui-dashboard.tsx # Main chat dashboard
-│   │   ├── header.tsx             # Site header with navigation
-│   │   ├── footer.tsx             # Site footer
-│   │   ├── paywall-card.tsx       # Subscription paywall
-│   │   ├── grace-period-warning.tsx # Payment failure warning
-│   │   ├── checkout-verifier.tsx  # Verify checkout completion
-│   │   └── user-menu.tsx          # User menu with billing link
-│   ├── lib/                       # Utilities and helpers
-│   │   ├── auth/
-│   │   │   └── verify-subscription.ts # Subscription verification
-│   │   ├── dify/
-│   │   │   ├── client.ts          # Centralized Dify API client
-│   │   │   └── errors.ts          # Error handling utilities
-│   │   ├── hooks/
-│   │   │   ├── use-dify-chat.ts   # Chat state & streaming
-│   │   │   └── use-conversations.ts # Conversation management
-│   │   ├── middleware/
-│   │   │   └── rate-limit.ts      # In-memory rate limiting
-│   │   ├── openrouter/
-│   │   │   └── title-generator.ts # AI title generation
-│   │   ├── supabase/
-│   │   │   ├── server.ts          # Server-side Supabase client
-│   │   │   └── admin.ts           # Admin Supabase client
-│   │   ├── content/
-│   │   │   └── landing-page-content.ts  # Landing page content
-│   │   ├── types.ts               # TypeScript type definitions
-│   │   └── utils.ts               # Utility functions (cn, etc.)
-│   ├── middleware.ts              # Clerk authentication middleware
-│   ├── .env.local                 # Local environment variables
-│   └── .env.production            # Production env reference
-└── CLAUDE.md                      # AI agent instructions
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 22.x
-- npm or pnpm
-- Clerk account
-- Supabase project
-- Stripe account
-- Dify AI chatbot instance
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/mchen04/castor.git
-   cd castor-1/frontend
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables:**
-
-   Copy `.env.example` to `.env.local` and fill in your credentials:
-   ```bash
-   cp .env.example .env.local
-   ```
-
-   Required variables:
-   ```env
-   # Supabase
-   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-   # Stripe
-   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
-   STRIPE_SECRET_KEY=your-stripe-secret-key
-   STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
-   STRIPE_PRICE_ID=your-stripe-price-id
-
-   # Clerk
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
-   CLERK_SECRET_KEY=your-clerk-secret-key
-   NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-   NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-   NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
-   NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
-
-   # Dify AI
-   DIFY_API_KEY=your-dify-api-key
-
-   # OpenRouter (for title generation)
-   OPENROUTER_API_KEY=your-openrouter-api-key
-
-   # App
-   NEXT_PUBLIC_SITE_URL=http://localhost:3000
-   ```
-
-4. **Run development server:**
-   ```bash
-   npm run dev
-   ```
-
-   Visit [http://localhost:3000](http://localhost:3000)
-
----
-
-## 🗄️ Database Schema
-
-**Supabase Tables:**
-
-### `users`
-```sql
-- id: uuid (primary key, generated)
-- clerk_id: text (unique, NOT NULL - Clerk user identifier)
-- email: text
-- has_paid: boolean (default: false)
-- stripe_customer_id: text (unique)
-- stripe_subscription_id: text (unique)
-- stripe_subscription_status: text (active, trialing, past_due, canceled, unpaid, etc.)
-- stripe_subscription_current_period_end: timestamptz
-- stripe_subscription_cancel_at_period_end: boolean
-- in_grace_period: boolean (default: false)
-- created_at: timestamptz
-- updated_at: timestamptz (auto-updated)
-```
-
-### `processed_events` (webhook idempotency)
-```sql
-- id: uuid (primary key)
-- event_id: text (unique, Stripe event ID)
-- created_at: timestamp
-```
-
----
-
-## 💳 Payment Flow
-
-### Subscription Flow
-1. User signs in with Clerk (Google/GitHub OAuth or email/password)
-2. Clerk redirects to Dashboard
-3. Dashboard checks payment status from Supabase `users` table (by `clerk_id`)
-4. If not subscribed → PaywallCard component shows Stripe Checkout button
-5. User clicks "Subscribe" → `/api/checkout` creates Stripe Checkout session
-6. User completes payment on Stripe
-7. Stripe sends `checkout.session.completed` webhook → `/api/webhook/stripe`
-8. Webhook handler:
-   - Verifies signature
-   - Checks idempotency (`processed_events` table)
-   - Updates `users` table with subscription metadata
-9. User returns to dashboard → sees chatbot
-
-### Recurring Payments
-- **Success:** `invoice.payment_succeeded` webhook clears grace period
-- **Failure:** `invoice.payment_failed` webhook sets grace period flag
-- **Grace Period:** User sees warning banner but maintains access during Stripe's retry window
-
-### Cancellation
-- User clicks "Manage Billing" → Stripe Customer Portal
-- Cancels subscription → `customer.subscription.deleted` webhook revokes access
-
----
-
-## 🤖 Dify AI Integration
-
-The Dify AI chatbot is integrated via **API proxy pattern** using Vercel Serverless Functions:
-
-**Key Features:**
-- **API Proxy:** All Dify API calls routed through `/api/dify/*` endpoints
-- **Authentication:** Clerk user verification + Supabase subscription check
-- **User Identification:** Clerk user ID passed to Dify API for conversation persistence
-- **Rate Limiting:** 30 requests/minute per user
-- **Streaming Chat:** Real-time responses via Server-Sent Events (SSE)
-- **Error Handling:** User-friendly error messages with retry logic
-- **Title Generation:** AI-powered conversation titles via OpenRouter
-
-**Architecture:**
-```
-Client → /api/dify/chat → Clerk Auth → Subscription Check → Dify API → SSE Stream → Client
-```
-
-**API Endpoints:**
-- `POST /api/dify/chat` - Send chat message (streaming)
-- `GET /api/dify/conversations` - List conversations
-- `GET /api/dify/messages` - Get conversation messages
-- `POST /api/dify/delete` - Delete conversation
-- `POST /api/dify/rename` - Rename conversation
-- `POST /api/dify/stop` - Stop generation
-- `POST /api/generate-title` - Generate conversation title
-
----
-
-## 🔐 Authentication & Authorization
-
-**Authentication:** Clerk handles all auth (Google OAuth, GitHub OAuth, email/password)
-**Authorization:** Middleware + server-side payment checks
-
-### Middleware (`middleware.ts`)
-- Protects routes except: `/`, `/sign-in`, `/sign-up`, `/api/webhook`
-- Uses Clerk's `clerkMiddleware` for session management
-- Automatic session refresh and CSRF protection
-
-### Payment Verification
-- **Client-side:** Dashboard reads user data from Supabase
-- **Server-side:** API routes verify payment status before granting access
-- **Webhook:** Stripe webhooks update payment status in real-time
-
----
-
-## 📡 API Routes
-
-### Payment Routes
-
-**`POST /api/checkout`**
-Creates Stripe Checkout session for new subscriptions.
-
-**`POST /api/customer-portal`**
-Creates Stripe Customer Portal session for billing management.
-
-**`GET /api/verify-checkout`**
-Verifies checkout session completion.
-
-**`POST /api/webhook/stripe`**
-Handles Stripe webhook events with signature verification and idempotency.
-
-### Dify AI Proxy Routes
-
-**`POST /api/dify/chat`**
-Send chat message with streaming SSE response. Requires active subscription. Rate limited to 30 req/min.
-
-**`GET /api/dify/conversations`**
-List user's conversations with pagination.
-
-**`GET /api/dify/messages`**
-Get messages from specific conversation.
-
-**`POST /api/dify/delete`**
-Delete a conversation.
-
-**`POST /api/dify/rename`**
-Rename a conversation.
-
-**`POST /api/dify/stop`**
-Stop generating a streaming response.
-
-**`POST /api/dify/generate-title`**
-Auto-generate conversation title.
-
-### Title Generation
-
-**`POST /api/generate-title`**
-Generate conversation title using OpenRouter AI.
-
----
-
-## 🎨 UI Components
-
-Built with **shadcn/ui** and custom components:
-
-### Landing Page Components
-- `HeroSection` - Hero with CTA
-- `ValuePropositionSection` - Value proposition with feature highlights
-- `ServicesSection` - Feature cards
-- `TestimonialsSection` - Customer testimonials
-- `FinalCTASection` - Bottom CTA
-- `ChatPreview` - Interactive chat preview demo
-
-### Dashboard Components
-- `PaywallCard` - Subscription paywall
-- `AssistantUIDashboard` - Main chat dashboard orchestrator
-- `Thread` - Conversation message view
-- `ThreadlistSidebar` - Conversation list with sidebar navigation
-- `GracePeriodWarning` - Payment failure alert
-- `UserMenu` - User dropdown with billing link
-- `CheckoutVerifier` - Verify checkout completion
-
-### UI Primitives (shadcn/ui)
-- Button, Card, Dialog, Dropdown, Input, Select, Tabs, Toast, etc.
-
----
-
-## 🧪 Testing & Quality Checks
-
-**Type Checking:**
-```bash
-npm run type-check
-```
-
-**Linting:**
-```bash
-npm run lint
-```
-
-**Unused Code Detection:**
-```bash
-npm run check:unused    # Detect unused code and dependencies
-npm run fix:unused      # Auto-fix detected unused code
-```
-
-**Run All Checks:**
-```bash
-npm run check:all       # Type + Lint + Unused detection
-```
-
-**Build:**
-```bash
+```sh
+cd frontend
+npm ci
 npm run build
+npm start
 ```
 
----
+Open **http://127.0.0.1:3210**. `npm run dev` provides development mode. The launcher binds only loopback and enables the local runtime guard. Use `CASTOR_PORT=3211 npm start` for another port. Run one server per workspace; the launcher enforces this with a local PID lock.
 
-## 🚢 Deployment
+Your single workspace is stored in `frontend/.castor/workspace.json`, ignored by Git, with atomic flushed writes and revision checks. `CASTOR_DATA_DIR=/absolute/path npm start` selects another local directory. Keep a backup before moving or restoring data; corrupt files are reported and never silently reset. Private fields/keys are not part of the workspace schema. No automatic cloud migration is attempted.
 
-**Platform:** Vercel
+## Use
 
-### Environment Variables (Vercel Dashboard)
-Add all variables from `.env.production` to Vercel:
-- Settings → Environment Variables → Add each variable
+- **Business:** enter facts, services, hours and FAQs; save once. More details includes accessibility, parking, languages, payment methods, specialties and social URLs. Facts stay blank until you supply them.
+- **Updates:** create, edit or delete local updates with terms, special hours and optional expiry. Expired updates remain in history and are excluded from pages/briefs. Updates are local drafts, never Google posts.
+- **Pages:** choose profile, updates, location/contact, services or FAQs; preview, open or export standalone HTML. Export JSON-LD separately. These are deterministic templates, not AI content or evidence of ranking gains. Only saved facts and approved source links appear.
+- **Sources:** capture a public HTTP(S) page. See extracted text and an actual timestamp, status, byte count and SHA-256 receipt. Approve or reject pending versions. Sync refetches the page; unchanged content retains its current state. Changed content requires approval and displays the prior approved text. Approved sources inform the workspace brief and reference links. Export an inert extracted reference, or remove a version locally.
+- **Assistant:** build/export a factual workspace brief. Create, rename and delete local conversations even without a provider. Dify chat is optional and clearly unavailable until explicitly configured. Google is inactive; the original repo implemented connection/token plumbing, not profile management.
+- **Backup / Restore:** download the whole local workspace as JSON. Restore a validated backup through the file picker after saving your current backup. Restore replaces local facts, history and conversations; revision stays monotonic.
 
-### Stripe Webhooks
-1. Add webhook endpoint in Stripe Dashboard:
-   ```
-   https://trycastor.dev/api/webhook/stripe
-   ```
+Capture supports static UTF-8 HTML up to 2 MiB, five redirects and a 20-second network deadline. It does not execute JavaScript, load assets, use cookies, log in, crawl linked pages, copy a full visual site or install a recorder/snippet. Private/reserved destinations and credential URLs are blocked, including at redirects/DNS resolution. Protected sites, DNS/network/TLS errors, non-HTML responses and pages without readable static text fail visibly. Manual sync only; no background actions.
 
-2. Subscribe to events:
-   - `checkout.session.completed`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `invoice.payment_succeeded`
-   - `invoice.payment_failed`
+## Optional Dify
 
-3. Copy webhook signing secret to `STRIPE_WEBHOOK_SECRET` in Vercel
+Only if you choose to send saved facts and approved source text to Dify, supply your own legitimate project key and explicit opt-in when launching:
 
-### Deploy
-```bash
-git push origin main
+```sh
+CASTOR_ENABLE_DIFY=1 DIFY_API_KEY='<your project key>' npm start
 ```
 
-Vercel auto-deploys on push to `main` branch.
+The key stays server-side and is never stored in the workspace or browser. Prefer your own project-scoped environment configuration over typing a real key into shell history. No credential discovery is implemented. The fixed official Dify endpoint uses its existing SSE chat/stop contract; errors and interrupted answers are identified. Local delete retains provider history. Account/provider operations were not acceptance requirements and have not been verified live. Gemini/Groq/OpenRouter/cloud publishing and Google OAuth/management remain archived inactive; no service success is simulated.
 
----
+## Check
 
-## 📝 Development Guidelines
+```sh
+cd frontend
+npm run type-check
+npm test
+npm run build
+npx playwright install chromium
+npm start
+# In another terminal, with the server running:
+npm run test:browser
+```
 
-### Code Style
-- **TypeScript:** Strict mode, explicit types
-- **Components:** PascalCase files, kebab-case for multi-word
-- **Functions:** camelCase
-- **Constants:** UPPER_SNAKE_CASE
-- **Files:** Keep under 350 lines, split if needed
+Browser tests use separate ephemeral headless Chromium contexts at desktop/mobile sizes. **Run browser tests on a separate data directory** because they intentionally edit, restore and delete test workspace data. Set `CASTOR_DATA_DIR` when starting the server and optionally `CASTOR_EVIDENCE` when testing to keep screenshots/downloads outside Git. Public capture tests need genuine network access; no fixture is passed off as a live source. Unit tests separately exercise escaping, expiry, parser edge cases, SSRF guards, revision conflicts, corrupt storage, and split SSE events.
 
-### Security
-- Never commit secrets (use `.env.local`)
-- Validate all webhook signatures
-- Use Row Level Security (RLS) in Supabase
-- Server-side payment verification only
+## Architecture & preservation
 
-### Git Workflow
-- `main` branch for production
-- Feature branches for development
-- Vercel previews for pull requests
+Next 15 + React 18 + TypeScript remains the foundation; six production dependencies replace the former commerce/auth/UI stack. Five UI task groups share CSS tokens and one JSON workspace. Node-only server modules perform persistence, inert HTML generation, public fetching and explicitly enabled Dify calls. The browser only calls same-origin local APIs. Hosted builds are skipped by root/frontend Vercel config and rejected by the build script; API/page middleware refuses a hosted runtime. No production endpoint or customer integration is active.
 
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Issue:** Clerk redirects to `/login` (404)
-- **Fix:** Ensure `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard` is set in Vercel
-
-**Issue:** Stripe webhook not working
-- **Fix:** Check webhook signature secret, verify endpoint URL in Stripe Dashboard
-
-**Issue:** Chatbot not loading
-- **Fix:** Verify user has active subscription, check Dify URL and user_id encoding
-
-**Issue:** Payment status not updating
-- **Fix:** Check Supabase webhook logs, verify `processed_events` table for duplicates
-
----
-
-## 📄 License
-
-Proprietary - All rights reserved
-
----
-
-## 👤 Author
-
-**Michael Chen**
-- GitHub: [@mchen04](https://github.com/mchen04)
-- Email: michaelluochen1@gmail.com
-
----
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/)
-- [Clerk](https://clerk.com/)
-- [Supabase](https://supabase.com/)
-- [Stripe](https://stripe.com/)
-- [Dify AI](https://dify.ai/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Vercel](https://vercel.com/)
+Read [architecture](docs/ARCHITECTURE.md) and [actual capability/provenance mapping](docs/CAPABILITIES.md). Verified full-ref history bundles, HEAD archives, GitHub resource metadata and checksum manifest live in documented durable task storage. Original clones are read-only. Forge controls deletion and publication; this branch is not a deployment request.

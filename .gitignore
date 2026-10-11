@@ -1,81 +1,18 @@
-# dependencies
 node_modules/
-.pnp
-.pnp.js
-
-# testing
-coverage/
-
-# next.js
 .next/
 out/
 build/
 dist/
-
-# production
+coverage/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env
-.env*.local
-.env.production
-
-# vercel
-.vercel
-
-# typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# supabase
-.supabase/
-
-# OS
-.DS_Store
-*.pem
-
-# debug
-*.log
-
-# IDE
-.vscode/
-.idea/
-
-# misc
-*.swp
-*.swo
-*~
-
-# stripe
-stripe-cli-webhook-secret
-
-# misc
-*.swp
-*.swo
-*~
-
-# turbo
-.turbo
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-
-# test
+.env
+.env.*
+!.env.example
+.vercel/
+.castor/
 test-results/
 playwright-report/
-playwright/.cache/
-
-# context (don't commit to repo)
-context/
-.claude/
-CLAUDE.md
-docs/
-
-# V0 prototype (keep local for reference)
-castor-chatbot/
+.DS_Store
+*.pem
