@@ -1,0 +1,113 @@
+import { test, expect } from '@playwright/test';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { freshWorkspace } from '../../lib/model';
+const evidence=process.env.CASTOR_EVIDENCE;
+async function artifact(name:string,body:string) {if(evidence){await mkdir(evidence,{recursive:true});await writeFile(path.join(evidence,name),body);}}
+test('independent local workflows and genuine public capture',async({page,request},testInfo)=>{
+  const project=testInfo.project.name; const errors:string[]=[];
+  const initial=(await (await request.get('/api/workspace')).json()).workspace;
+  const reset=await request.post('/api/restore',{data:{workspace:freshWorkspace(),revision:initial.revision}});expect(reset.status()).toBe(200);
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/');await expect(page.getByRole('heading',{name:'Business facts'})).toBeVisible();
+  // Each viewport exercises actual API-backed forms; no hosted login or payment.
+  await page.getByLabel('Business name',{exact:true}).fill(`Castor ${project} test studio`);
+  await page.getByLabel('Category',{exact:true}).fill('Workshop');
+  await page.getByLabel('Website',{exact:true}).fill('https://example.com/');
+  await page.getByLabel('Phone',{exact:true}).fill('555-0100');
+  await page.getByLabel('Street address').fill('1 Test Lane');
+  await page.getByLabel('City',{exact:true}).fill('Seattle');
+  await page.getByLabel('State / region').fill('WA');
+  await page.getByLabel('Postal code').fill('98101');
+  await page.getByLabel('Country',{exact:true}).fill('US');
+  await page.getByLabel('Hours',{exact:true}).fill('Mon–Fri 09:00–17:00');
+  await page.getByLabel('Service area').fill('Seattle');
+  await page.getByLabel('Description',{exact:true}).fill('Example business used only for local workflow verification.');
+  await page.getByLabel('Services One per line').fill('Repair\nConsultation');
+  await page.getByText('More business details',{exact:true}).click();
+  for(const [label,value] of [['Specialties','Bicycles'],['Pricing','$'],['Parking','Street parking'],['Payment methods','Cash'],['Languages','English'],['Accessibility','Step-free entrance'],['Established year','2020']])await page.getByLabel(label,{exact:true}).fill(value);
+  await page.getByLabel('Social links').fill('https://example.com/about');
+  await page.getByRole('button',{name:'Add FAQ'}).click();
+  await page.getByLabel('Question 1',{exact:true}).fill('Do you offer repairs?');await page.getByLabel('Answer 1',{exact:true}).fill('Yes, by appointment.');
+  await page.getByRole('button',{name:'Add FAQ'}).click();await page.getByRole('button',{name:'Remove FAQ 2'}).click();
+  await page.getByRole('button',{name:'Save business'}).click();await expect(page.getByRole('status')).toContainText('Saved locally.');
+  await page.reload();await expect(page.getByLabel('Business name',{exact:true})).toHaveValue(`Castor ${project} test studio`);
+  await page.screenshot({path:evidence?`${evidence}/captures/${project}-business.png`:testInfo.outputPath('business.png'),fullPage:true});
+  await page.getByRole('button',{name:'Updates',exact:false}).click();
+  await page.getByLabel('Title',{exact:true}).fill(`${project} Test offer`);await page.getByRole('textbox',{name:'Update',exact:true}).fill('Verified local draft.');
+  await page.getByLabel('Type',{exact:true}).selectOption('offer');await page.getByLabel('Terms',{exact:true}).fill('Test terms only.');await page.getByLabel('Special hours',{exact:true}).fill('Saturday 10:00–12:00');
+  await page.getByRole('button',{name:'Add update'}).click();await expect(page.getByRole('status')).toContainText('Saved locally.');
+  await page.getByRole('button',{name:'Edit',exact:true}).first().click();await page.getByRole('textbox',{name:'Update',exact:true}).fill('Edited verified local draft.');await page.getByRole('button',{name:'Save update'}).click();await expect(page.getByRole('status')).toContainText('Saved locally.');
+  await page.getByRole('button',{name:'Edit',exact:true}).first().click();await page.getByRole('button',{name:'Cancel edit'}).click();
+  await page.getByLabel('Title',{exact:true}).fill('Expired fixture update');await page.getByRole('textbox',{name:'Update',exact:true}).fill('EXPIRED FIXTURE DO NOT RENDER');await page.getByLabel('Expires').fill('2020-01-01T10:00');await page.getByRole('button',{name:'Add update'}).click();await expect(page.getByText('Expired',{exact:true})).toBeVisible();
+  await page.screenshot({path:evidence?`${evidence}/captures/${project}-updates.png`:testInfo.outputPath('updates.png'),fullPage:true});
+  await page.getByRole('button',{name:'Pages',exact:false}).click();
+  for(const intent of ['business','direct','local','category','branded-local']) {
+    await page.getByLabel('Page',{exact:true}).selectOption(intent);
+    const html=await request.get(`/api/pages/${intent}`);expect(html.status()).toBe(200);expect(await html.text()).not.toContain('EXPIRED FIXTURE DO NOT RENDER');
+    await expect(page.locator('iframe')).toHaveAttribute('src',`/api/pages/${intent}`);
+    await expect(page.frameLocator('iframe').getByRole('heading',{level:1})).toContainText(`Castor ${project} test studio`);
+    const downloaded=page.waitForEvent('download');await page.getByRole('link',{name:'Export HTML'}).click();const file=await downloaded;expect(file.suggestedFilename()).toBe(`castor-${intent}.html`);await artifact(`${project}-${intent}.html`,await readFile((await file.path())!,'utf8'));
+  }
+  const popupEvent=page.waitForEvent('popup');await page.getByRole('link',{name:'Open preview'}).click();const popup=await popupEvent;await expect(popup.getByRole('heading',{level:1})).toContainText(`Castor ${project} test studio`);await popup.close();
+  const ldDownload=page.waitForEvent('download');await page.getByRole('link',{name:'Export JSON-LD'}).click();const ld=await ldDownload;const schema=JSON.parse(await readFile((await ld.path())!,'utf8'));expect(schema['@graph'][0]['@type']).toBe('LocalBusiness');
+  await page.screenshot({path:evidence?`${evidence}/captures/${project}-pages.png`:testInfo.outputPath('pages.png'),fullPage:true});
+  await page.getByRole('button',{name:'Sources',exact:false}).click();
+  await page.getByLabel('Public page URL').fill('https://example.com/');
+  const network=page.waitForResponse(r=>r.url().endsWith('/api/capture') && r.request().method()==='POST');await page.getByRole('button',{name:'Capture / sync'}).click();const captured=await network;expect(captured.status()).toBe(200);
+  const receipt=await captured.json();expect(receipt.captureReceipt.statusCode).toBe(200);expect(receipt.captureReceipt.bytes).toBeGreaterThan(100);expect(receipt.captureReceipt.sha256).toMatch(/^[a-f0-9]{64}$/);await artifact(`${project}-live-capture.json`,JSON.stringify(receipt,null,2));
+  await expect(page.getByRole('heading',{name:'Example Domain',exact:true})).toBeVisible();
+  const pending=receipt.workspace.captures.find((c:{status:string})=>c.status==='pending');
+  if(pending){const before=await request.get('/api/brief');expect(await before.text()).not.toContain('This domain is for use');await page.getByRole('button',{name:'Approve',exact:true}).click();await expect(page.getByRole('status')).toContainText('Source approved locally.');}
+  const brief=await request.get('/api/brief');expect(await brief.text()).toContain('Example Domain');
+  const again=page.waitForResponse(r=>r.url().endsWith('/api/capture'));await page.getByRole('button',{name:'Sync again'}).click();const sync=await again;expect(sync.status()).toBe(200);expect((await sync.json()).message).toContain('unchanged');
+  await page.getByText('Network receipt',{exact:true}).click();
+  await page.screenshot({path:evidence?`${evidence}/captures/${project}-sources-live.png`:testInfo.outputPath('sources.png'),fullPage:true});
+  const sourceDownload=page.waitForEvent('download');await page.getByRole('link',{name:'Export reference'}).click();const sourceFile=await sourceDownload;const sourceHtml=await readFile((await sourceFile.path())!,'utf8');expect(sourceHtml).toContain('Example Domain');await artifact(`${project}-live-reference.html`,sourceHtml);
+  await page.getByLabel('Public page URL').fill('http://127.0.0.1/');await page.getByRole('button',{name:'Capture / sync'}).click();await expect(page.locator('.messages').getByRole('alert')).toContainText('public site');
+  await page.getByLabel('Public page URL').fill('https://example.com/castor-no-such-public-page');const failNetwork=page.waitForResponse(r=>r.url().endsWith('/api/capture'));await page.getByRole('button',{name:'Capture / sync'}).click();const failed=await failNetwork;expect(failed.status()).toBe(422);await expect(page.locator('.messages').getByRole('alert')).toContainText(/HTTP 404|Public fetch failed/);await artifact(`${project}-live-failure.json`,JSON.stringify({status:failed.status(),body:await failed.json()},null,2));
+  await page.getByRole('button',{name:'Assistant',exact:false}).click();await page.getByRole('button',{name:'Build brief'}).click();await expect(page.locator('.brief')).toContainText('Example Domain');await expect(page.getByRole('button',{name:'Send to Dify'})).toBeDisabled();
+  await page.getByRole('button',{name:'New',exact:true}).click();await expect(page.getByLabel('Conversation name')).toBeVisible();await page.getByLabel('Conversation name').fill(`${project} Local planning`);await page.getByRole('button',{name:'Rename',exact:true}).click();await expect(page.getByRole('status')).toContainText('renamed');
+  await page.screenshot({path:evidence?`${evidence}/captures/${project}-assistant.png`:testInfo.outputPath('assistant.png'),fullPage:true});
+  const ai=await request.post('/api/chat',{data:{id:(await (await request.get('/api/workspace')).json()).workspace.conversations[0].id,question:'Test without a provider'}});expect(ai.status()).toBe(503);
+  const google=await request.post('/api/google-business/authorize',{data:{}});expect(google.status()).toBe(501);
+  const briefDownload=page.waitForEvent('download');await page.getByRole('link',{name:'Export brief'}).click();const briefFile=await briefDownload;const briefText=await readFile((await briefFile.path())!,'utf8');expect(briefText).toContain('Example Domain');await artifact(`${project}-brief.txt`,briefText);
+  const backupDownload=page.waitForEvent('download');await page.getByRole('link',{name:'Backup',exact:true}).click();const backup=await backupDownload;const backupText=await readFile((await backup.path())!,'utf8');await artifact(`${project}-backup.json`,backupText);
+  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Delete conversation'}).click();await expect(page.getByRole('status')).toContainText('deleted');
+  // Restore through the actual file picker, keeping backups outside Git.
+  page.once('dialog',d=>d.accept());await page.locator('input[type=file]').setInputFiles({name:'castor-backup.json',mimeType:'application/json',buffer:Buffer.from(backupText)});await expect(page.getByRole('status')).toContainText('restored');
+  await page.reload();await page.getByRole('button',{name:'Assistant',exact:false}).click();await expect(page.getByRole('button',{name:`${project} Local planning`,exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'Updates',exact:false}).click();page.once('dialog',d=>d.accept());await page.locator('.list-item').filter({has:page.getByRole('heading',{name:'Expired fixture update'})}).first().getByRole('button',{name:'Delete',exact:true}).click();await expect(page.getByRole('status')).toContainText('Update deleted');
+  // No horizontal clipping on either viewport; focus and labels use native accessible controls.
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);expect(errors).toEqual([]);
+  await artifact(`${project}-workflow-result.json`,JSON.stringify({project,passed:true,pageErrors:errors,health:await (await request.get('/api/health')).json()},null,2));
+});
+
+test('fixture-only review transitions, comparison, removal and invalid restore',async({page,request},testInfo)=>{
+  const { randomUUID }=await import('node:crypto');
+  const original=(await (await request.get('/api/workspace')).json()).workspace;
+  const fixtureUrl='https://example.org/castor-fixture-only';
+  const base={sourceUrl:fixtureUrl,finalUrl:fixtureUrl,fetchedAt:new Date().toISOString(),statusCode:200,contentType:'text/html',bytes:100,description:'Synthetic review test; no network fetch claimed.',headings:[],links:[],schemas:[]};
+  const approved={...base,id:randomUUID(),title:'FIXTURE ONLY approved baseline',text:'FIXTURE BASELINE TEXT',sha256:'a'.repeat(64),status:'approved'};
+  const pending={...base,id:randomUUID(),title:'FIXTURE ONLY changed source',text:'FIXTURE CHANGED TEXT',sha256:'b'.repeat(64),status:'pending'};
+  const restore=await request.post('/api/restore',{data:{workspace:{...original,captures:[pending,approved,...original.captures]},revision:original.revision}});expect(restore.status()).toBe(200);
+  await page.goto('/');await page.getByRole('button',{name:'Sources',exact:false}).click();
+  await expect(page.locator('.comparison')).toContainText('FIXTURE BASELINE TEXT');await expect(page.locator('.comparison')).toContainText('FIXTURE CHANGED TEXT');
+  await page.screenshot({path:evidence?`${evidence}/captures/${testInfo.project.name}-sources-fixture-comparison.png`:testInfo.outputPath('fixture-comparison.png'),fullPage:true});
+  await page.getByRole('button',{name:'Reject',exact:true}).click();await expect(page.getByRole('status')).toContainText('rejected');
+  let state=(await (await request.get('/api/workspace')).json()).workspace;
+  expect(state.captures.find((c:{id:string})=>c.id===approved.id).status).toBe('approved');expect(await (await request.get('/api/brief')).text()).not.toContain('FIXTURE CHANGED TEXT');
+  const replay=await request.post(`/api/decisions/${pending.id}`,{data:{action:'approve',revision:state.revision}});expect(replay.status()).toBe(409);
+  const second={...pending,id:randomUUID(),sha256:'c'.repeat(64),title:'FIXTURE ONLY second change',text:'FIXTURE SECOND CHANGE'};
+  expect((await request.post('/api/restore',{data:{workspace:{...state,captures:[second,...state.captures]},revision:state.revision}})).status()).toBe(200);
+  await page.reload();await page.getByRole('button',{name:'Sources',exact:false}).click();await page.getByRole('button',{name:'Approve',exact:true}).click();await expect(page.getByRole('status')).toContainText('approved');
+  state=(await (await request.get('/api/workspace')).json()).workspace;
+  expect(state.captures.find((c:{id:string})=>c.id===approved.id).status).toBe('superseded');expect(state.captures.find((c:{id:string})=>c.id===second.id).status).toBe('approved');
+  expect(await (await request.get('/api/brief')).text()).toContain('FIXTURE SECOND CHANGE');
+  const rejectedBackup=await request.post('/api/restore',{data:{workspace:{...state,apiKey:'FIXTURE UNKNOWN FIELD'},revision:state.revision}});expect(rejectedBackup.status()).toBe(400);
+  expect((await (await request.get('/api/workspace')).json()).workspace.revision).toBe(state.revision);
+  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Remove',exact:true}).click();await expect(page.getByRole('status')).toContainText('Capture removed');
+  const current=(await (await request.get('/api/workspace')).json()).workspace;
+  const restored=await request.post('/api/restore',{data:{workspace:original,revision:current.revision}});expect(restored.status()).toBe(200);
+  await artifact(`${testInfo.project.name}-fixture-review-result.json`,JSON.stringify({fixtureOnly:true,passed:true,networkFetchClaimed:false,rejectKeepsApproved:true,replayedDecisionStatus:replay.status(),approveSupersedesPrior:true,invalidBackupStatus:rejectedBackup.status(),removed:true,originalRestored:true},null,2));
+});
